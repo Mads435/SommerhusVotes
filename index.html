@@ -228,13 +228,33 @@ const FAMILY_PASS = "Kode1234"; // same code for everyone for now — can become
 // This replaces Claude's persistent storage (which required a paid Claude
 // account to interact with) with a plain GitHub Contents API call, which
 // works from any browser with no account needed on the VIEWER's side.
-// Fill these in once you've created the repo + fine-grained token (repo
-// scoped, Contents: Read and write).
+//
+// IMPORTANT: the token is deliberately NOT hardcoded here. GitHub's secret
+// scanning automatically revokes any token it finds committed to a public
+// repo, which kept breaking this app. Instead, each device stores its own
+// copy of the token in localStorage — set once, either by opening a
+// one-time "setup link" (?setup=TOKEN) or by typing it in manually. It
+// never appears in anything that gets committed to git.
 const GITHUB_OWNER = "Mads435";
 const GITHUB_REPO  = "SommerhusVotes";
-const GITHUB_TOKEN = "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";
 const GITHUB_PATH  = "data.json";
 const GITHUB_API   = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+const TOKEN_STORAGE_KEY = "sh_gh_token";
+let GITHUB_TOKEN = null;
+function loadGithubToken(){
+  const params = new URLSearchParams(window.location.search);
+  const setupToken = params.get("setup");
+  if(setupToken){
+    localStorage.setItem(TOKEN_STORAGE_KEY, setupToken);
+    GITHUB_TOKEN = setupToken;
+    // Scrub the token out of the visible URL so it doesn't linger on screen.
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+    return;
+  }
+  const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
+  if(stored) GITHUB_TOKEN = stored;
+}
 const VOTE_DEADLINE = new Date("2026-08-25T23:59:59");
 
 const SEED_HOUSES = [
@@ -840,6 +860,12 @@ function emptyVotesBlob(){
 
 /* ---------------- INIT ---------------- */
 async function init(){
+  loadGithubToken();
+  if(!GITHUB_TOKEN){
+    screen = "tokenSetup";
+    render();
+    return;
+  }
   await loadState();
   screen = "name";
   render();
@@ -1069,6 +1095,7 @@ function metaChips(house){
 function render(){
   if(screen === "loading"){ app.innerHTML = `<p class="center-msg">Indlæser…</p>`; return; }
   if(screen === "name") return renderName();
+  if(screen === "tokenSetup") return renderTokenSetup();
   if(screen === "familyLogin") return renderFamilyLogin();
   if(screen === "vote") return renderVote();
   if(screen === "done") return renderDone();
@@ -1076,6 +1103,37 @@ function render(){
   if(screen === "closed") return renderClosed();
   if(screen === "adminLogin") return renderAdminLogin();
   if(screen === "admin") return renderAdmin();
+}
+
+function renderTokenSetup(){
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🏡 Sommerhus<span>-afstemning</span></div>
+    </div>
+    <div class="center-msg" style="margin-top:40px;">
+      <h2 class="display" style="margin-bottom:10px;">Første opsætning</h2>
+      <p style="color:var(--muted);font-size:14px;">Denne enhed har ikke gemt adgangskoden til at hente/gemme data endnu. Indsæt den herunder — du får den af Mads. Det er kun nødvendigt denne ene gang på hver enhed.</p>
+    </div>
+    <label>Adgangskode</label>
+    <input id="token-input" type="password" autocomplete="off">
+    <p id="token-err" style="color:var(--terracotta);font-size:13px;min-height:16px;margin:8px 0 0;"></p>
+    <button class="primary-btn" onclick="saveTokenManually()">Gem og fortsæt</button>
+  `;
+  const input = document.getElementById("token-input");
+  input.focus();
+  input.addEventListener("keydown", e => { if(e.key === "Enter") saveTokenManually(); });
+}
+function saveTokenManually(){
+  const input = document.getElementById("token-input");
+  const val = input.value.trim();
+  const errEl = document.getElementById("token-err");
+  if(!val){
+    if(errEl) errEl.textContent = "Indsæt venligst adgangskoden.";
+    return;
+  }
+  localStorage.setItem(TOKEN_STORAGE_KEY, val);
+  GITHUB_TOKEN = val;
+  init();
 }
 
 function renderName(){
