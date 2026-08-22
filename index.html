@@ -787,6 +787,19 @@ async function ghUpdate(mutate, message){
   }
   return false;
 }
+// Clicking through several houses quickly fires off several ghUpdate() calls
+// almost at once. Left to run concurrently, they race each other for the
+// same file and repeatedly hit 409 Conflict. Routing every write through
+// this queue makes them run one at a time, in order, from this browser —
+// so a fast clicker never collides with themselves. Different families
+// saving around the same time is still rare enough for ghUpdate's built-in
+// conflict retry to handle on its own.
+let writeQueue = Promise.resolve();
+function queueGhUpdate(mutate, message){
+  const result = writeQueue.then(() => ghUpdate(mutate, message));
+  writeQueue = result.catch(() => {}); // keep the chain alive even if one write fails
+  return result;
+}
 async function refreshState(){
   const { data } = await ghGet();
   if(data){
@@ -947,11 +960,11 @@ function castVote(houseId, value){
   currentVotes[houseId] = value;
   votesBlob[currentFamId] = currentVotes; // optimistic local update, instant UI
   const famId_ = currentFamId;
-  ghUpdate(draft => {
+  queueGhUpdate(draft => {
     draft.votes = draft.votes || emptyVotesBlob();
     draft.votes[famId_] = {...(draft.votes[famId_] || {}), [houseId]: value};
     return draft;
-  }, `Vote ${famId_}: ${houseId}=${value}`); // fire-and-forget — don't block the UI
+  }, `Vote ${famId_}: ${houseId}=${value}`); // queued — never races other clicks
   goToVotingOrDone();
 }
 
@@ -1252,11 +1265,11 @@ function castVoteInline(houseId, value){
   currentVotes[houseId] = value;
   votesBlob[currentFamId] = currentVotes;
   const famId_ = currentFamId;
-  ghUpdate(draft => {
+  queueGhUpdate(draft => {
     draft.votes = draft.votes || emptyVotesBlob();
     draft.votes[famId_] = {...(draft.votes[famId_] || {}), [houseId]: value};
     return draft;
-  }, `Vote ${famId_}: ${houseId}=${value}`); // fire-and-forget
+  }, `Vote ${famId_}: ${houseId}=${value}`); // queued
   render();
 }
 
@@ -1409,4 +1422,3 @@ async function renderAdmin(){
 </script>
 </body>
 </html>
-<!-- redeploy trigger 1787431476 -->
