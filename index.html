@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Sommerhus-afstemning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EFE3C7;
+    --linen:#FBF3E4;
+    --linen-dim:#E6DCC6;
+    --ink:#2B2620;
+    --terracotta:#C1592A;
+    --olive:#5C6A3E;
+    --gold:#A97A2E;
+    --gold-dim:rgba(169,122,46,0.35);
+    --muted:#7A6A50;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 12% 6%, rgba(255,255,255,0.5), transparent 40%),
+      radial-gradient(circle at 90% 95%, rgba(193,89,42,0.10), transparent 48%);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',serif;font-weight:400;}
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:24px 20px 44px;
+    display:flex;
+    flex-direction:column;
+  }
+  .topbar{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .brand{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:21px;
+    letter-spacing:0.2px;
+    color:var(--ink);
+  }
+  .brand span{color:var(--terracotta);}
+  .link-btn{
+    background:none;border:none;color:var(--gold);
+    font-family:'Inter',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+    text-decoration:none;border-bottom:1px solid var(--gold-dim);
+    cursor:pointer;opacity:0.9;padding:4px 0;
+  }
+  .link-btn:hover{opacity:1;border-bottom-color:var(--gold);}
+
+  /* ---- editorial card ---- */
+  .postcard{
+    background:var(--linen);
+    color:var(--ink);
+    border-radius:2px;
+    box-shadow:0 16px 34px rgba(43,38,32,0.18), 0 3px 8px rgba(43,38,32,0.10);
+    position:relative;
+    overflow:hidden;
+    transition:transform .32s ease, opacity .32s ease;
+  }
+  .postcard.leaving-like{transform:translateX(115%);opacity:0;}
+  .postcard.leaving-dislike{transform:translateX(-115%);opacity:0;}
+
+  .img-wrap{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;}
+  .img-wrap svg{width:100%;height:100%;display:block;}
+  .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .img-eyebrow{
+    position:absolute;top:18px;left:20px;color:#fff;font-size:10px;letter-spacing:3px;
+    font-weight:600;text-transform:uppercase;opacity:0.92;text-shadow:0 1px 4px rgba(0,0,0,0.5);
+  }
+  .img-nav{
+    position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(43,38,32,0.5);border:none;cursor:pointer;padding:0;
+  }
+  .img-nav.prev{left:10px;}
+  .img-nav.next{right:10px;}
+  .img-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:5px;justify-content:center;}
+  .img-dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.4);}
+  .img-dots span.active{background:var(--gold);}
+  .photo-link{
+    position:absolute;right:14px;bottom:14px;background:rgba(43,38,32,0.68);color:#fff;
+    font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;text-decoration:none;
+    padding:6px 11px;border-radius:2px;
+  }
+  .photo-link:hover{background:rgba(43,38,32,0.88);}
+  .stamp{
+    position:absolute;top:16px;right:18px;color:#fff;
+    font-family:'Inter',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;
+    padding:6px 11px;background:var(--terracotta);text-transform:uppercase;
+  }
+  .stamp.ok{background:var(--olive);}
+  .soldout-ribbon{
+    position:absolute;left:-22%;width:144%;top:50%;
+    transform:translateY(-50%) rotate(-26deg);
+    background:var(--terracotta);color:#fff;text-align:center;
+    padding:9px 0;font-family:'Inter',sans-serif;font-weight:800;
+    font-size:20px;letter-spacing:5px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+    z-index:5;pointer-events:none;
+  }
+  .thumb-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .thumb{position:relative;width:64px;height:64px;overflow:hidden;}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .thumb button{
+    position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+    background:rgba(43,38,32,0.8);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer;
+  }
+
+  .postcard-body{padding:26px 24px 24px;position:relative;}
+  .postcard-body::before{
+    content:"";position:absolute;inset:8px;border:1px solid var(--gold-dim);pointer-events:none;
+  }
+  .house-name{font-family:'Fraunces',serif;font-weight:400;font-size:23px;margin:0 0 8px;line-height:1.2;letter-spacing:0.2px;}
+  .rule{width:34px;height:1px;background:var(--gold);margin:0 0 10px;}
+  .house-loc{font-size:12px;color:var(--muted);margin:0 0 16px;letter-spacing:0.3px;}
+  .house-meta{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px;}
+  .chip{
+    font-size:11px;color:var(--olive);font-weight:600;letter-spacing:0.6px;text-transform:uppercase;
+  }
+  .chip.gold{color:var(--gold);}
+  .house-link{
+    display:inline-block;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--ink);text-decoration:none;font-weight:600;
+    border-bottom:1px solid var(--gold);padding-bottom:2px;
+  }
+
+  /* ---- buttons ---- */
+  .vote-actions{display:flex;gap:12px;margin-top:22px;}
+  .vote-btn{
+    flex:1;padding:14px 0;border:1px solid var(--ink);background:none;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    cursor:pointer;color:var(--ink);transition:transform .12s ease, background .15s ease;
+  }
+  .vote-btn:active{transform:scale(0.97);}
+  .vote-btn.dislike{background:none;}
+  .vote-btn.like{background:var(--olive);color:var(--linen);border-color:var(--olive);}
+  .vote-btn .icon{display:none;}
+
+  .primary-btn{
+    background:var(--gold);color:var(--ink);border:none;border-radius:2px;
+    padding:14px 20px;font-family:'Inter',sans-serif;font-weight:700;font-size:12px;
+    letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;width:100%;margin-top:10px;
+  }
+  .secondary-btn{
+    background:none;border:1px solid var(--gold-dim);color:var(--ink);border-radius:2px;
+    padding:12px 20px;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;
+    letter-spacing:1px;text-transform:uppercase;cursor:pointer;width:100%;margin-top:10px;
+  }
+  .danger-btn{
+    background:none;border:1px solid var(--terracotta);color:var(--terracotta);border-radius:2px;
+    padding:9px 14px;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;
+    letter-spacing:0.6px;text-transform:uppercase;cursor:pointer;
+  }
+
+  /* ---- name picker ---- */
+  .fam-list{display:flex;flex-direction:column;gap:8px;margin-top:22px;}
+  .fam-btn{
+    background:var(--linen);border:1px solid rgba(43,38,32,0.12);color:var(--ink);
+    border-radius:2px;padding:15px 18px;font-size:15px;font-family:'Fraunces',serif;font-weight:400;
+    text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;
+    transition:border-color .15s ease;box-shadow:0 2px 6px rgba(43,38,32,0.06);
+  }
+  .fam-btn:hover{border-color:var(--gold);}
+  .check{color:var(--gold);font-size:16px;}
+
+  .center-msg{
+    text-align:center;margin-top:60px;
+  }
+  .center-msg .emoji{font-size:40px;display:block;margin-bottom:12px;}
+  .progress-note{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;opacity:0.9;}
+
+  /* ---- closed screen ---- */
+  .rose-frame{
+    margin-top:28px;border:1px solid var(--gold-dim);border-radius:2px;
+    padding:36px 18px;text-align:center;background:var(--linen);
+  }
+  .rose-frame img{max-width:100%;border-radius:2px;display:none;}
+
+  /* ---- admin ---- */
+  .admin-card{background:var(--linen);border:1px solid rgba(43,38,32,0.08);
+    border-radius:2px;padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 6px rgba(43,38,32,0.05);}
+  .admin-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;
+    border-bottom:1px solid rgba(43,38,32,0.08);font-size:14px;}
+  .admin-row:last-child{border-bottom:none;}
+  label{display:block;font-size:11px;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);margin:12px 0 5px;}
+  input,textarea,select{
+    width:100%;background:#fff;color:var(--ink);border:1px solid rgba(43,38,32,0.15);border-radius:2px;
+    padding:10px 12px;font-family:'Inter',sans-serif;font-size:14px;
+  }
+  textarea{min-height:70px;resize:vertical;}
+  .tab-row{display:flex;gap:6px;margin-bottom:16px;}
+  .tab{flex:1;text-align:center;padding:10px 0;border:1px solid rgba(43,38,32,0.15);background:var(--linen);
+    font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:600;cursor:pointer;color:var(--muted);}
+  .tab.active{background:var(--gold);color:#fff;border-color:var(--gold);}
+  .rank{font-family:'Fraunces',serif;font-style:italic;color:var(--gold);width:26px;display:inline-block;}
+  .small{font-size:11px;color:var(--muted);letter-spacing:0.3px;}
+</style>
+</head>
+<body>
+<div id="app"><p class="center-msg">Indlæser…</p></div>
+
+<script>
+/* ---------------- CONFIG ---------------- */
+const FAMILIES = [
+  "Christine & Henrik","Cæcilie & Mads","Laura & Leif",
+  "Stine & Mads","Tania & Mathias","Tina & David"
+];
+const ADMIN_USER = "Admin";
+const ADMIN_PASS = "Kode1234";
+const FAMILY_PASS = "Kode1234"; // same code for everyone for now — can become per-family codes later
+
+// ---- Storage backend: your own private GitHub repo ----
+// This replaces Claude's persistent storage (which required a paid Claude
+// account to interact with) with a plain GitHub Contents API call, which
+// works from any browser with no account needed on the VIEWER's side.
+// Fill these in once you've created the repo + fine-grained token (repo
+// scoped, Contents: Read and write).
+const GITHUB_OWNER = "Mads435";
+const GITHUB_REPO  = "SommerhusVotes";
+const GITHUB_TOKEN = "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";
+const GITHUB_PATH  = "data.json";
+const GITHUB_API   = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+const VOTE_DEADLINE = new Date("2026-08-25T23:59:59");
+
+const SEED_HOUSES = [
+  {
+    id:"h1", name:"Villa i Suze-la-Rousse", location:"Suze-la-Rousse, Drôme, Provence, Frankrig",
+    link:"https://www.novasol.dk/feriehuse/suze-la-rousse-fpd493",
+    rooms:24, rating:5, price:null, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h2", name:"Familiehus med pool nær Lectoure", location:"Saint-Clar, Gers, Occitanie, Frankrig",
+    link:"https://landfolk.com/da/l/9dc9c49d",
+    rooms:24, rating:null, price:null, soldOut:false, art:"garden-pool"
+  },
+  {
+    id:"h3", name:"Vingårdsvilla i La Celle", location:"La Celle, Var, Provence, Frankrig",
+    link:"https://www.novasol.dk/feriehuse/la-celle-fcs024",
+    rooms:22, rating:5, price:null, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h4", name:"Feriehus med sauna i Fortunago", location:"Fortunago, Lombardiet, Italien",
+    link:"https://www.feline.dk/search/Y2VJuXh6TudHUZet8cWq-vxhDgwMDSIMQAAA/140-ILH008",
+    rooms:27, rating:4, price:null, soldOut:false, art:"sauna"
+  },
+  {
+    id:"h5", name:"Toscansk gård i Cetona", location:"Cetona, Toscana, Italien",
+    link:"https://www.feline.dk/search/Y2VJuXh6TudHUZet8cWq-vxhDgwMDSIMQAAA/140-ITS560",
+    rooms:20, rating:5, price:2320, soldOut:false, art:"tuscan"
+  },
+  {
+    id:"h6", name:"Landejendom med pool i Apecchio", location:"Apecchio, Marche, Italien",
+    link:"https://www.novasol.dk/feriehuse/apecchio-imm109",
+    rooms:27, rating:3, price:null, soldOut:false, art:"mountain"
+  },
+  {
+    id:"h7", name:"Casa Primavera, stenvilla ved skovsøen", location:"Costalunga, Piemonte, Italien",
+    link:"https://www.airbnb.dk/rooms/49203265",
+    rooms:7, rating:4.5, price:7955, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h8", name:"XXL-villa \"Piemonte\" med pool og spabad", location:"Tigliole, Piemonte, Italien",
+    link:"https://www.airbnb.dk/rooms/22566321",
+    rooms:8, rating:4.0, price:10782, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h9", name:"Romignano Vinfarm i Chianti", location:"Terranuova Bracciolini, Toscana, Italien",
+    link:"https://www.airbnb.dk/rooms/5546225",
+    rooms:9, rating:4.5, price:13355, soldOut:false, art:"tuscan"
+  },
+  {
+    id:"h10", name:"Toscansk bondegård nær Siena", location:"Sovicille, Siena, Toscana, Italien",
+    link:"https://www.airbnb.dk/rooms/22620502",
+    rooms:8, rating:5.0, price:11773, soldOut:false, art:"tuscan"
+  },
+  {
+    id:"h11", name:"Afsides villa med udsigt", location:"Borgo a Mozzano, Toscana, Italien",
+    link:"https://www.airbnb.dk/rooms/743925050993194909",
+    rooms:7, rating:5.0, price:8679, soldOut:false, art:"mountain"
+  },
+  {
+    id:"h12", name:"Villa La Camillina, historisk vingårdsvilla", location:"Canelli, Piemonte, Italien",
+    link:"https://www.airbnb.dk/rooms/1335529618252138328",
+    rooms:14, rating:4.5, price:12881, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h13", name:"Stenvilla med udsigt i Casentino", location:"Bibbiena, Toscana, Italien",
+    link:"https://www.airbnb.dk/rooms/14798395",
+    rooms:9, rating:5.0, price:10896, soldOut:false, art:"tuscan"
+  },
+  {
+    id:"h14", name:"Historisk Villa Di Corsano nær Siena", location:"Monteroni d'Arbia, Toscana, Italien",
+    link:"https://www.airbnb.dk/rooms/927554",
+    rooms:10, rating:5.0, price:11552, soldOut:false, art:"tuscan"
+  },
+  {
+    id:"h15", name:"Mas Aarvik og Vega i Provence", location:"Barbentane, Provence, Frankrig",
+    link:"https://www.airbnb.dk/rooms/26827187",
+    rooms:9, rating:5.0, price:null, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h16", name:"Ferme Émeraude med spa og indendørs pool", location:"Gérardmer, Vosges, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1449225032402937879",
+    rooms:11, rating:5.0, price:null, soldOut:false, art:"sauna"
+  },
+  {
+    id:"h17", name:"Villa Martinière med stor pool", location:"Saint-Georges-des-Coteaux, Charente-Maritime, Frankrig",
+    link:"https://www.airbnb.dk/rooms/704068575909946736",
+    rooms:9, rating:5.0, price:null, soldOut:false, art:"garden-pool"
+  },
+  {
+    id:"h18", name:"Maison Cantalauze, vingård i Minervois", location:"Trèbes, Languedoc-Roussillon, Frankrig",
+    link:"https://www.airbnb.dk/rooms/7777896",
+    rooms:9, rating:5.0, price:null, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h19", name:"Les Rangeardières ved Angers", location:"Saint-Barthélemy-d'Anjou, Pays de la Loire, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1085391938298001220",
+    rooms:10, rating:5.0, price:null, soldOut:false, art:"garden-pool"
+  },
+  {
+    id:"h20", name:"Château de la Loire, Cinq-Mars-la-Pile", location:"Cinq-Mars-la-Pile, Loire-dalen, Frankrig",
+    link:"https://www.airbnb.dk/rooms/912169960998624226",
+    rooms:10, rating:5.0, price:null, soldOut:false, art:"mountain"
+  },
+  {
+    id:"h21", name:"Harmony Homes Montereau", location:"Montereau, Loire-dalen, Frankrig",
+    link:"https://www.airbnb.dk/rooms/840624697207518093",
+    rooms:7, rating:5.0, price:null, soldOut:false, art:"garden-pool"
+  },
+  {
+    id:"h22", name:"Les Deux Lavoirs ved Vercors", location:"La Baume-Cornillane, Auvergne-Rhône-Alpes, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1359234562369785235",
+    rooms:9, rating:5.0, price:null, soldOut:false, art:"mountain"
+  },
+  {
+    id:"h23", name:"Bastide de Stan med sauna og jacuzzi", location:"Caderousse, Provence, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1081827371483736126",
+    rooms:11, rating:5.0, price:null, soldOut:false, art:"sauna"
+  },
+  {
+    id:"h24", name:"Provence-villa ved golfbanen", location:"Mallemort, Provence, Frankrig",
+    link:"https://www.airbnb.dk/rooms/24652657",
+    rooms:8, rating:5.0, price:null, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h25", name:"Villa i Cannes med havudsigt", location:"Cannes, Côte d'Azur, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1344918802663562103",
+    rooms:7, rating:5.0, price:null, soldOut:false, art:"coast"
+  },
+  {
+    id:"h26", name:"Privat fyrreskovs-ejendom i Côte d'Azur", location:"La Londe-les-Maures, Côte d'Azur, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1354034472762069680",
+    rooms:6, rating:5.0, price:null, soldOut:false, art:"vineyard-pool"
+  },
+  {
+    id:"h27", name:"PROVENZA, bondegård med opvarmet pool", location:"Tourves, Provence, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1621004505037269027",
+    rooms:5, rating:5.0, price:null, soldOut:false, art:"tuscan"
+  },
+  {
+    id:"h28", name:"Vivaldi Hotel", location:"Puteaux, Île-de-France, Frankrig",
+    link:"https://www.airbnb.dk/rooms/1662941915185071048",
+    rooms:null, rating:4.5, price:null, soldOut:false, art:"garden-pool"
+  }
+];
+const ART_LABELS = {
+  "vineyard-pool":"Vingård & pool", "garden-pool":"Skovhave & pool",
+  "sauna":"Sauna & pool", "tuscan":"Toscansk gård", "mountain":"Bjerglandskab", "coast":"Ved kysten"
+};
+
+/* ---------------- STATE ---------------- */
+let houses = [];
+let currentFamId = null;
+let currentFamName = null;
+let currentVotes = {};
+let pendingFamIdx = null; // family chosen on the front page, awaiting code entry
+let isAdmin = false;
+let screen = "loading"; // loading | name | familyLogin | vote | done | review | closed | adminLogin | admin
+let imgIdx = {};          // per-house current image index (browsing view)
+let adminTab = "results"; // results | manage | add | edit
+let editingHouseId = null;
+let formImages = [];      // images currently attached to the open add/edit form
+
+const app = document.getElementById("app");
+const famId = i => "f" + (i+1);
+
+function escapeAttr(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+}
+
+// Reads a photo chosen from the device, scales it down client-side (canvas)
+// and returns it as a compact base64 data URL. No network request at all —
+// this is what actually fixes the hotlink/CSP problem, since the image is
+// never re-fetched from an external server once uploaded.
+function resizeImageFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 700;
+        let w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else{ w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.62));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function onFormImagesSelected(input){
+  const files = Array.from(input.files || []);
+  for(const f of files){
+    try{ formImages.push(await resizeImageFile(f)); }
+    catch(e){ console.error(e); }
+  }
+  render();
+}
+function removeFormImage(idx){
+  formImages.splice(idx, 1);
+  render();
+}
+// Every house gets a hand-drawn travel-poster style illustration, generated
+// locally as inline SVG. No network request, so nothing to block.
+function sceneSVG(art){
+  const P = {
+    "vineyard-pool": {sky1:"#F6D9A8", sky2:"#E39A5C", hill:"#6B7A4A", accent:"#C1592A", vineyard:true, pool:true},
+    "garden-pool":   {sky1:"#F2EBDD", sky2:"#D8CBA0", hill:"#6B7A4A", accent:"#C99A44", trees:"round", pool:true},
+    "sauna":         {sky1:"#F2E4C8", sky2:"#D9BE8C", hill:"#6B7A4A", accent:"#8a6a3a", steam:true, pool:true},
+    "tuscan":         {sky1:"#F7E3B0", sky2:"#E0975A", hill:"#8A5A2E", accent:"#C1592A", trees:"cypress", vineyard:true},
+    "mountain":       {sky1:"#F0E2C2", sky2:"#C99A44", hill:"#4A4335", accent:"#6B7A4A", mountain:true, pool:true},
+    "coast":          {sky1:"#F6E7C6", sky2:"#E39A5C", hill:"#6B7A4A", accent:"#C99A44", water:true}
+  };
+  const o = P[art] || P["vineyard-pool"];
+  let parts = "";
+  if(o.mountain){
+    parts += `<path d="M0,190 L60,100 L110,165 L170,80 L225,165 L400,140 L400,300 L0,300 Z" fill="${o.hill}" opacity="0.9"/>`;
+  }else{
+    parts += `<path d="M0,205 Q100,155 200,195 T400,185 L400,300 L0,300 Z" fill="${o.hill}" opacity="0.88"/>`;
+  }
+  if(o.vineyard){
+    for(let i=0;i<8;i++){
+      parts += `<line x1="${15+i*48}" y1="235" x2="${58+i*48}" y2="205" stroke="#8A5A2E" stroke-width="4" opacity="0.55"/>`;
+    }
+  }
+  if(o.trees === "cypress"){
+    [30,300,345].forEach(x=>{ parts += `<ellipse cx="${x}" cy="205" rx="7" ry="32" fill="${o.hill}"/>`; });
+  }
+  if(o.trees === "round"){
+    [45,330].forEach(x=>{
+      parts += `<rect x="${x-3}" y="205" width="6" height="20" fill="#5A3A22"/><circle cx="${x}" cy="200" r="20" fill="${o.hill}" opacity="0.92"/>`;
+    });
+  }
+  parts += `<circle cx="335" cy="66" r="30" fill="${o.accent}" opacity="0.92"/>`;
+  parts += `<g transform="translate(148,148)">
+      <rect x="0" y="42" width="100" height="58" fill="#F7EFE0"/>
+      <polygon points="-10,42 50,4 110,42" fill="${o.accent}"/>
+      <rect x="18" y="62" width="18" height="18" fill="${o.hill}"/>
+      <rect x="64" y="62" width="18" height="18" fill="${o.hill}"/>
+      <rect x="42" y="74" width="16" height="26" fill="${o.hill}"/>
+    </g>`;
+  if(o.steam){
+    parts += `<g stroke="#F7EFE0" stroke-width="3" fill="none" opacity="0.75">
+      <path d="M282,150 q6,-14 0,-28"/><path d="M296,150 q6,-14 0,-28"/>
+    </g>`;
+  }
+  if(o.pool){
+    parts += `<rect x="225" y="222" width="140" height="42" rx="8" fill="#3E93A8"/>
+      <path d="M230,233 q10,6 20,0 t20,0 t20,0 t20,0 t20,0 t20,0" stroke="#DDF3F7" stroke-width="2" fill="none" opacity="0.65"/>`;
+  }
+  if(o.water){
+    parts += `<rect x="0" y="245" width="400" height="55" fill="#3E93A8"/>
+      <path d="M0,255 q20,8 40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0" stroke="#DDF3F7" stroke-width="2" fill="none" opacity="0.5"/>`;
+  }
+  return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block;">
+      <defs><linearGradient id="sky-${art}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${o.sky1}"/><stop offset="100%" stop-color="${o.sky2}"/>
+      </linearGradient></defs>
+      <rect width="400" height="300" fill="url(#sky-${art})"/>
+      ${parts}
+    </svg>`;
+}
+
+/* ---------------- STORAGE HELPERS (GitHub-backed) ---------------- */
+function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// UTF-8 safe base64 helpers (house names etc. contain æøå, so plain
+// btoa/atob would break on the non-ASCII characters).
+function b64Encode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode("0x" + p1)));
+}
+function b64Decode(str){
+  return decodeURIComponent(atob(str).split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join(""));
+}
+
+async function ghGet(){
+  try{
+    const res = await fetch(GITHUB_API, {
+      headers: { "Authorization": "Bearer " + GITHUB_TOKEN, "Accept": "application/vnd.github+json" }
+    });
+    if(res.status === 404) return { data: null, sha: null };
+    if(!res.ok){ console.error("GitHub GET failed", res.status, await res.text()); return { data: null, sha: null, error: true }; }
+    const json = await res.json();
+    const content = b64Decode(json.content.replace(/\n/g, ""));
+    return { data: JSON.parse(content), sha: json.sha };
+  }catch(e){
+    console.error("GitHub GET error", e);
+    return { data: null, sha: null, error: true };
+  }
+}
+async function ghPut(dataObj, sha, message){
+  try{
+    const body = { message: message || "Update sommerhus data", content: b64Encode(JSON.stringify(dataObj)) };
+    if(sha) body.sha = sha;
+    const res = await fetch(GITHUB_API, {
+      method: "PUT",
+      headers: {
+        "Authorization": "Bearer " + GITHUB_TOKEN,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    if(res.status === 409) return { ok: false, conflict: true };
+    if(!res.ok){ console.error("GitHub PUT failed", res.status, await res.text()); return { ok: false }; }
+    const json = await res.json();
+    return { ok: true, sha: json.content.sha };
+  }catch(e){
+    console.error("GitHub PUT error", e);
+    return { ok: false };
+  }
+}
+function defaultState(){
+  return { houses: SEED_HOUSES, votes: emptyVotesBlob(), importedSeedIds: SEED_HOUSES.map(h => h.id) };
+}
+// Read-modify-write with retry on conflicts (two people saving at once).
+// `mutate` always receives the FRESHEST state fetched right before saving,
+// so a slow local edit can never clobber someone else's concurrent vote —
+// as long as each mutator only touches the field(s) it's responsible for.
+async function ghUpdate(mutate, message){
+  for(let attempt = 0; attempt < 4; attempt++){
+    const { data, sha, error } = await ghGet();
+    if(error){ await delay(500 * (attempt + 1)); continue; }
+    const current = data || defaultState();
+    const updated = mutate(current);
+    const result = await ghPut(updated, sha, message);
+    if(result.ok){
+      houses = updated.houses;
+      votesBlob = updated.votes;
+      importedSeedIds = new Set(updated.importedSeedIds || []);
+      return true;
+    }
+    if(!result.conflict){ await delay(500 * (attempt + 1)); continue; }
+    // conflict — someone else saved in between; loop and retry with fresh data
+  }
+  return false;
+}
+async function refreshState(){
+  const { data } = await ghGet();
+  if(data){
+    houses = data.houses || houses;
+    votesBlob = data.votes || votesBlob;
+    importedSeedIds = new Set(data.importedSeedIds || [...importedSeedIds]);
+  }
+}
+async function loadState(){
+  const { data } = await ghGet();
+  if(data){
+    houses = data.houses || SEED_HOUSES;
+    votesBlob = data.votes || emptyVotesBlob();
+    importedSeedIds = new Set(data.importedSeedIds || []);
+  }else{
+    // Truly empty file (first ever run) — seed it.
+    const seeded = defaultState();
+    const ok = await ghUpdate(() => seeded, "Initial seed");
+    if(!ok){
+      // Couldn't reach GitHub at all — fall back to in-memory only, so the
+      // app still works this session (nothing will persist though).
+      houses = SEED_HOUSES;
+      votesBlob = emptyVotesBlob();
+      importedSeedIds = new Set(SEED_HOUSES.map(h => h.id));
+    }
+  }
+  FAMILIES.forEach((_, i) => { if(!votesBlob[famId(i)]) votesBlob[famId(i)] = {}; });
+}
+
+// Seed houses not yet in the saved list. Only added when the admin
+// explicitly clicks "Importér" — never automatically.
+function getPendingImport(){
+  const existingIds = new Set(houses.map(h => h.id));
+  return SEED_HOUSES.filter(h => !existingIds.has(h.id) && !importedSeedIds.has(h.id));
+}
+async function importNewHouses(){
+  const missing = getPendingImport();
+  if(!missing.length) return;
+  await ghUpdate(draft => {
+    draft.houses = draft.houses.concat(missing);
+    draft.importedSeedIds = [...new Set([...(draft.importedSeedIds || []), ...missing.map(h => h.id)])];
+    return draft;
+  }, "Import new houses");
+  render();
+}
+
+// All 6 families' votes live under one "votes" field in the same file.
+let votesBlob = null; // {f1:{houseId:'like'|'dislike',...}, f2:{...}, ...}
+function emptyVotesBlob(){
+  const b = {};
+  FAMILIES.forEach((_, i) => { b[famId(i)] = {}; });
+  return b;
+}
+
+/* ---------------- INIT ---------------- */
+async function init(){
+  await loadState();
+  screen = "name";
+  render();
+}
+init();
+
+
+/* ---------------- NAVIGATION ---------------- */
+function selectFamily(idx){
+  pendingFamIdx = idx;
+  screen = "familyLogin";
+  render();
+}
+async function confirmFamilyLogin(){
+  const input = document.getElementById("fam-code");
+  const errEl = document.getElementById("fam-login-err");
+  if(!input) return;
+  if(input.value !== FAMILY_PASS){
+    if(errEl) errEl.textContent = "Forkert kode. Prøv igen.";
+    input.value = "";
+    input.focus();
+    return;
+  }
+  const idx = pendingFamIdx;
+  pendingFamIdx = null;
+  currentFamId = famId(idx);
+  currentFamName = FAMILIES[idx];
+  currentVotes = votesBlob[currentFamId] || {};
+  goToVotingOrDone();
+}
+function goToVotingOrDone(){
+  if(new Date() > VOTE_DEADLINE){ screen = "closed"; render(); return; }
+  const next = houses.find(h => !(h.id in currentVotes));
+  if(next){ screen = "vote"; }
+  else{ screen = "done"; }
+  render();
+}
+function backToStart(){
+  currentFamId = null; currentFamName = null; currentVotes = {}; pendingFamIdx = null; isAdmin = false;
+  screen = "name"; render();
+}
+
+/* ---------------- CUSTOM CONFIRM (native confirm()/alert() are blocked
+   inside this sandboxed preview, so we build our own tiny dialog) ---------------- */
+let pendingConfirm = null; // {message, onYes}
+function askConfirm(message, onYes){
+  pendingConfirm = {message, onYes};
+  showConfirmOverlay();
+}
+function showConfirmOverlay(){
+  hideConfirmOverlay();
+  if(!pendingConfirm) return;
+  const div = document.createElement("div");
+  div.id = "confirm-overlay";
+  div.style.cssText = "position:fixed;inset:0;background:rgba(43,38,32,0.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;";
+  div.innerHTML = `
+    <div style="background:var(--linen);border-radius:2px;padding:26px 22px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.35);">
+      <p style="font-family:'Fraunces',serif;font-size:16px;color:var(--ink);margin:0 0 20px;">${pendingConfirm.message}</p>
+      <div style="display:flex;gap:10px;">
+        <button class="secondary-btn" style="margin:0;border-color:rgba(43,38,32,0.2);" onclick="resolveConfirm(false)">Annullér</button>
+        <button class="primary-btn" style="margin:0;" onclick="resolveConfirm(true)">Bekræft</button>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+function hideConfirmOverlay(){
+  const el = document.getElementById("confirm-overlay");
+  if(el) el.remove();
+}
+function resolveConfirm(yes){
+  const cb = pendingConfirm && pendingConfirm.onYes;
+  pendingConfirm = null;
+  hideConfirmOverlay();
+  if(yes && cb) cb();
+}
+
+/* ---------------- VOTING ---------------- */
+function castVote(houseId, value){
+  currentVotes[houseId] = value;
+  votesBlob[currentFamId] = currentVotes; // optimistic local update, instant UI
+  const famId_ = currentFamId;
+  ghUpdate(draft => {
+    draft.votes = draft.votes || emptyVotesBlob();
+    draft.votes[famId_] = {...(draft.votes[famId_] || {}), [houseId]: value};
+    return draft;
+  }, `Vote ${famId_}: ${houseId}=${value}`); // fire-and-forget — don't block the UI
+  goToVotingOrDone();
+}
+
+/* ---------------- ADMIN ---------------- */
+function tryAdminLogin(){
+  const u = document.getElementById("admin-user").value.trim();
+  const p = document.getElementById("admin-pass").value;
+  const err = document.getElementById("admin-err");
+  if(u === ADMIN_USER && p === ADMIN_PASS){
+    isAdmin = true; screen = "admin"; adminTab = "results"; render();
+  }else{
+    err.textContent = "Forkert brugernavn eller kode.";
+  }
+}
+async function saveHouseFromForm(){
+  const name = document.getElementById("nh-name").value.trim();
+  const link = document.getElementById("nh-link").value.trim();
+  const location = document.getElementById("nh-loc").value.trim();
+  const rooms = parseInt(document.getElementById("nh-rooms").value) || null;
+  const rating = document.getElementById("nh-rating").value ? parseFloat(document.getElementById("nh-rating").value) : null;
+  const price = document.getElementById("nh-price").value ? parseInt(document.getElementById("nh-price").value) : null;
+  const art = document.getElementById("nh-art").value;
+  const soldOut = document.getElementById("nh-soldout").checked;
+  const errEl = document.getElementById("form-error");
+  if(!name || !link){
+    if(errEl) errEl.textContent = "Navn og link er påkrævet.";
+    return;
+  }
+  const images = formImages.slice();
+  const id = editingHouseId || ("h" + Date.now());
+  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, images};
+
+  const ok = await ghUpdate(draft => {
+    draft.houses = editingHouseId
+      ? draft.houses.map(h => h.id === id ? {...h, ...newHouseData} : h)
+      : draft.houses.concat([newHouseData]);
+    return draft;
+  }, editingHouseId ? "Edit house " + id : "Add house " + id);
+
+  if(!ok){
+    if(errEl) errEl.textContent = "Kunne ikke gemme lige nu (kunne ikke nå GitHub). Prøv igen om lidt — intet er gemt endnu.";
+    return;
+  }
+  editingHouseId = null;
+  formImages = [];
+  adminTab = "manage";
+  render();
+}
+function startEditHouse(id){
+  editingHouseId = id;
+  const h = houses.find(x => x.id === id);
+  formImages = h && h.images ? h.images.slice() : [];
+  adminTab = "edit";
+  render();
+}
+function goToAddTab(){
+  editingHouseId = null;
+  formImages = [];
+  adminTab = "add";
+  render();
+}
+function cancelEditHouse(){
+  editingHouseId = null;
+  formImages = [];
+  adminTab = "manage";
+  render();
+}
+function removeHouse(id){
+  askConfirm("Fjern dette hus fra puljen? Det kan ikke fortrydes.", async ()=>{
+    await ghUpdate(draft => {
+      draft.houses = draft.houses.filter(h => h.id !== id);
+      return draft;
+    }, "Remove house " + id);
+    render();
+  });
+}
+function resetVoting(){
+  askConfirm("Nulstil ALLE familiers stemmer? Dette kan ikke fortrydes.", async ()=>{
+    await ghUpdate(draft => {
+      draft.votes = emptyVotesBlob();
+      return draft;
+    }, "Reset all votes");
+    render();
+  });
+}
+async function refreshAdmin(){
+  await refreshState();
+  render();
+}
+
+/* ---------------- RENDER HELPERS ---------------- */
+function stars(r){
+  if(r === null || r === undefined) return "Ikke vurderet";
+  return "★".repeat(Math.round(r)) + "☆".repeat(5-Math.round(r));
+}
+function imageBlock(house, opts){
+  opts = opts || {};
+  const stampHtml = opts.stamp ? `<div class="stamp ${opts.stamp==='like'?'ok':''}">${opts.stamp==='like'?'Elsket':'Nej tak'}</div>` : "";
+  const eyebrow = opts.eyebrow ? `<div class="img-eyebrow">${opts.eyebrow}</div>` : "";
+  const imgs = (house.images && house.images.length) ? house.images : [];
+  if(imgs.length){
+    const idx = (imgIdx[house.id] || 0) % imgs.length;
+    const nav = imgs.length > 1 ? `
+      <button class="img-nav prev" onclick="event.stopPropagation();nextImage('${house.id}',-1,${imgs.length})">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
+      <button class="img-nav next" onclick="event.stopPropagation();nextImage('${house.id}',1,${imgs.length})">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>` : "";
+    const dots = imgs.length > 1 ? `<div class="img-dots">${imgs.map((_,i)=>`<span class="${i===idx?'active':''}"></span>`).join("")}</div>` : "";
+    return `<div class="img-wrap">
+        <img src="${imgs[idx]}" alt="${house.name}">
+        ${eyebrow}${nav}${dots}${stampHtml}
+      </div>`;
+  }
+  return `<div class="img-wrap">
+      ${sceneSVG(house.art)}
+      ${eyebrow}
+      <a class="photo-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se billeder ↗</a>
+      ${stampHtml}
+    </div>`;
+}
+function nextImage(houseId, dir, total){
+  const cur = imgIdx[houseId] || 0;
+  imgIdx[houseId] = (cur + dir + total) % total;
+  render();
+}
+function metaChips(house){
+  return `<div class="house-meta">
+    <span class="chip">${house.rooms ?? "?"} værelser</span>
+    <span class="chip gold">${stars(house.rating)}</span>
+  </div>`;
+}
+
+/* ---------------- SCREENS ---------------- */
+function render(){
+  if(screen === "loading"){ app.innerHTML = `<p class="center-msg">Indlæser…</p>`; return; }
+  if(screen === "name") return renderName();
+  if(screen === "familyLogin") return renderFamilyLogin();
+  if(screen === "vote") return renderVote();
+  if(screen === "done") return renderDone();
+  if(screen === "review") return renderReview();
+  if(screen === "closed") return renderClosed();
+  if(screen === "adminLogin") return renderAdminLogin();
+  if(screen === "admin") return renderAdmin();
+}
+
+function renderName(){
+  const progressList = FAMILIES.map((_,i)=> Object.keys(votesBlob[famId(i)]||{}).length);
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🏡 Sommerhus<span>-afstemning</span></div>
+      <button class="link-btn" onclick="screen='adminLogin';render()">Admin</button>
+    </div>
+    <p style="color:var(--muted);font-size:14px;margin-top:0;">Vælg jeres navn for at like eller dislike husene. I kan ændre jeres stemmer indtil <b>25. august</b>.</p>
+    <div class="fam-list">
+      ${FAMILIES.map((f,i)=>`
+        <button class="fam-btn" onclick="selectFamily(${i})">
+          <span>${f}</span>
+          ${progressList[i] === houses.length && houses.length>0 ? '<span class="check">✔</span>' : `<span class="small">${progressList[i]}/${houses.length}</span>`}
+        </button>`).join("")}
+    </div>
+  `;
+}
+
+function renderFamilyLogin(){
+  const name = FAMILIES[pendingFamIdx];
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="screen='name';pendingFamIdx=null;render()">&larr; Tilbage</button>
+    </div>
+    <div class="center-msg" style="margin-top:50px;">
+      <h2 class="display" style="margin-bottom:6px;">${name}</h2>
+      <p style="color:var(--muted);font-size:14px;">Indtast jeres kode for at stemme.</p>
+    </div>
+    <label>Kode</label>
+    <input id="fam-code" type="password" autocomplete="off">
+    <p id="fam-login-err" style="color:var(--terracotta);font-size:13px;min-height:16px;margin:8px 0 0;"></p>
+    <button class="primary-btn" onclick="confirmFamilyLogin()">Log ind</button>
+  `;
+  const input = document.getElementById("fam-code");
+  input.focus();
+  input.addEventListener("keydown", e => { if(e.key === "Enter") confirmFamilyLogin(); });
+}
+
+function renderVote(){
+  const house = houses.find(h => !(h.id in currentVotes));
+  if(!house){ screen="done"; render(); return; }
+  const votedCount = Object.keys(currentVotes).length;
+  const num = houses.findIndex(h=>h.id===house.id) + 1;
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="backToStart()">&larr; Skift familie</button>
+      <span class="small">${votedCount+1} / ${houses.length}</span>
+    </div>
+    <div class="postcard" id="card">
+      ${house.soldOut ? '<div class="soldout-ribbon">UDSOLGT</div>' : ""}
+      ${imageBlock(house, {eyebrow:`Hus ${String(num).padStart(2,"0")} / ${String(houses.length).padStart(2,"0")}`})}
+      <div class="postcard-body">
+        <h2 class="house-name">${house.name}</h2>
+        <div class="rule"></div>
+        <p class="house-loc">${house.location||""}</p>
+        ${metaChips(house)}
+        <p class="small" style="margin:0 0 10px;">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr. pr. par" : "Se pris på hjemmesiden"}</p>
+        <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se hele opslaget ↗</a>
+      </div>
+    </div>
+    <div class="vote-actions">
+      <button class="vote-btn dislike" onclick="voteAnim('${house.id}','dislike')">Nej tak</button>
+      <button class="vote-btn like" onclick="voteAnim('${house.id}','like')">Elsker det</button>
+    </div>
+  `;
+}
+function voteAnim(houseId, value){
+  const card = document.getElementById("card");
+  if(card){ card.classList.add(value === "like" ? "leaving-like" : "leaving-dislike"); }
+  setTimeout(()=>castVote(houseId, value), 260);
+}
+
+function renderDone(){
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="backToStart()">&larr; Skift familie</button>
+    </div>
+    <div class="center-msg">
+      <span class="emoji">🥂</span>
+      <h2 class="display" style="margin-bottom:6px;">Alle huse gennemgået</h2>
+      <p style="color:var(--muted);font-size:14px;">Tak for jeres stemmer, ${currentFamName}. I kan ændre jeres valg indtil <b>25. august</b>.</p>
+      <button class="primary-btn" onclick="screen='review';render()">Se og ret jeres svar</button>
+    </div>
+  `;
+}
+
+function renderReview(){
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="screen='done';render()">&larr; Tilbage</button>
+      <span class="small">Alle huse</span>
+    </div>
+    ${houses.map((house,i) => {
+      const v = currentVotes[house.id];
+      return `<div class="postcard" style="margin-bottom:18px;">
+        ${house.soldOut ? '<div class="soldout-ribbon">UDSOLGT</div>' : ""}
+        ${imageBlock(house, {stamp:v, eyebrow:`Hus ${String(i+1).padStart(2,"0")} / ${String(houses.length).padStart(2,"0")}`})}
+        <div class="postcard-body">
+          <h2 class="house-name">${house.name}</h2>
+          <div class="rule"></div>
+          <p class="house-loc">${house.location||""}</p>
+          ${metaChips(house)}
+          <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer">Se hele opslaget ↗</a>
+          <div class="vote-actions">
+            <button class="vote-btn dislike" style="${v==='dislike'?'background:var(--terracotta);color:#fff;border-color:var(--terracotta);':''}" onclick="castVoteInline('${house.id}','dislike')">Nej tak</button>
+            <button class="vote-btn like" style="${v==='like'?'':'background:none;color:var(--ink);'}" onclick="castVoteInline('${house.id}','like')">Elsker det</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("")}
+  `;
+}
+function castVoteInline(houseId, value){
+  currentVotes[houseId] = value;
+  votesBlob[currentFamId] = currentVotes;
+  const famId_ = currentFamId;
+  ghUpdate(draft => {
+    draft.votes = draft.votes || emptyVotesBlob();
+    draft.votes[famId_] = {...(draft.votes[famId_] || {}), [houseId]: value};
+    return draft;
+  }, `Vote ${famId_}: ${houseId}=${value}`); // fire-and-forget
+  render();
+}
+
+function renderClosed(){
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="backToStart()">&larr; Skift familie</button>
+    </div>
+    <div class="center-msg">
+      <span class="emoji">🔒</span>
+      <h2 class="display">Afstemningen er lukket</h2>
+      <p style="color:var(--muted);font-size:14px;">Resultatet præsenteres til Rosé og Rejer 🥂🦐</p>
+      <div class="rose-frame">
+        <img id="rose-img" src="" alt="Rosé og Rejer">
+        <p class="small" style="margin:0;" id="rose-fallback">🥂🦐<br>Billede tilføjes snart</p>
+      </div>
+    </div>
+  `;
+  const img = document.getElementById("rose-img");
+  img.onerror = () => { img.style.display="none"; };
+  img.onload = () => { img.style.display="block"; document.getElementById("rose-fallback").style.display="none"; };
+}
+
+function renderAdminLogin(){
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="backToStart()">&larr; Tilbage</button>
+    </div>
+    <h2 class="display">Admin-login</h2>
+    <label>Brugernavn</label>
+    <input id="admin-user" type="text" autocomplete="off">
+    <label>Kode</label>
+    <input id="admin-pass" type="password">
+    <p id="admin-err" style="color:var(--terracotta);font-size:13px;min-height:16px;"></p>
+    <button class="primary-btn" onclick="tryAdminLogin()">Log ind</button>
+  `;
+}
+
+async function renderAdmin(){
+  const allVotes = FAMILIES.map((_,i)=> votesBlob[famId(i)] || {});
+  const results = houses.map(h=>{
+    let likes=0, dislikes=0;
+    allVotes.forEach(v=>{ if(v[h.id]==='like') likes++; else if(v[h.id]==='dislike') dislikes++; });
+    return {...h, likes, dislikes};
+  }).sort((a,b)=>b.likes-a.likes);
+  const progress = FAMILIES.map((f,i)=>({name:f, count:Object.keys(allVotes[i]).length}));
+
+  let body = "";
+  if(adminTab === "results"){
+    body = `
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;">Resultat (flest likes øverst)</h3>
+          <button class="link-btn" onclick="refreshAdmin()">🔄 Opdatér</button>
+        </div>
+        ${results.map((h,i)=>`
+          <div class="admin-row">
+            <span><span class="rank">#${i+1}</span> ${h.name}</span>
+            <span>❤ ${h.likes} &nbsp; ✕ ${h.dislikes}</span>
+          </div>`).join("")}
+      </div>
+      <div class="admin-card">
+        <h3 style="margin-top:0;">Hvem mangler at stemme</h3>
+        ${progress.map(p=>`
+          <div class="admin-row">
+            <span>${p.name}</span>
+            <span>${p.count===houses.length ? '<span class="check">✔ Færdig</span>' : p.count+" / "+houses.length}</span>
+          </div>`).join("")}
+      </div>
+      <button class="danger-btn" onclick="resetVoting()">Nulstil alle stemmer</button>
+    `;
+  } else if(adminTab === "manage"){
+    body = `
+      <div class="admin-card">
+        <h3 style="margin-top:0;">Huse i puljen (${houses.length})</h3>
+        ${houses.map((h,i)=>`
+          <div class="admin-row">
+            <span><span class="rank">#${i+1}</span> ${h.name}${h.soldOut ? ' <span style="color:var(--terracotta);font-weight:700;font-size:11px;">· UDSOLGT</span>' : ""}</span>
+            <span style="display:flex;gap:6px;">
+              <button class="secondary-btn" style="width:auto;margin:0;padding:7px 12px;font-size:12px;" onclick="startEditHouse('${h.id}')">Redigér</button>
+              <button class="danger-btn" onclick="removeHouse('${h.id}')">Fjern</button>
+            </span>
+          </div>`).join("") || '<p class="small">Ingen huse endnu.</p>'}
+      </div>
+    `;
+  } else if(adminTab === "add" || adminTab === "edit"){
+    const editing = adminTab === "edit" ? houses.find(h => h.id === editingHouseId) : null;
+    const h = editing || {name:"",link:"",location:"",rooms:"",rating:"",price:"",soldOut:false};
+    body = `
+      <div class="admin-card">
+        <h3 style="margin-top:0;">${editing ? "Redigér hus" : "Tilføj hus manuelt"}</h3>
+        <p class="small">Åbn husets link i en ny fane, og indtast/ret info herunder.</p>
+        <label>Navn*</label><input id="nh-name" value="${escapeAttr(h.name)}">
+        <label>Link til opslag*</label><input id="nh-link" value="${escapeAttr(h.link)}">
+        <label>Beliggenhed</label><input id="nh-loc" value="${escapeAttr(h.location)}">
+        <label>Antal værelser</label><input id="nh-rooms" type="number" value="${h.rooms ?? ""}">
+        <label>Rating (0-5)</label><input id="nh-rating" type="number" step="0.5" min="0" max="5" value="${h.rating ?? ""}">
+        <label>Pris pr. par (kr)</label><input id="nh-price" type="number" value="${h.price ?? ""}">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:16px;">
+          <input id="nh-soldout" type="checkbox" style="width:auto;" ${h.soldOut ? "checked" : ""}>
+          <span style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);">Udsolgt</span>
+        </label>
+        <label>Billeder (upload fra din enhed)</label>
+        <input id="nh-file" type="file" accept="image/*" multiple onchange="onFormImagesSelected(this)">
+        <p class="small" style="margin:4px 0 0;">Billederne gemmes direkte i appen — ingen eksterne links. Hold gerne til 2-4 billeder pr. hus.</p>
+        <div class="thumb-row">
+          ${formImages.map((src,i)=>`
+            <div class="thumb"><img src="${src}"><button onclick="removeFormImage(${i})">✕</button></div>
+          `).join("")}
+        </div>
+        ${formImages.length ? `<p class="small" style="margin:6px 0 0;">Billeder her fylder ca. ${(new Blob(formImages).size/1e6).toFixed(1)} MB.</p>` : ""}
+        <label>Illustration (vises indtil der er uploadet billeder)</label>
+        <select id="nh-art">
+          ${Object.entries(ART_LABELS).map(([key,label])=>
+            `<option value="${key}" ${(h.art||"vineyard-pool")===key?"selected":""}>${label}</option>`
+          ).join("")}
+        </select>
+        <p id="form-error" class="small" style="color:var(--terracotta);min-height:14px;margin:12px 0 0;"></p>
+        <button class="primary-btn" onclick="saveHouseFromForm()">${editing ? "Gem ændringer" : "Tilføj hus"}</button>
+        ${editing ? `<button class="secondary-btn" onclick="cancelEditHouse()">Annullér</button>` : ""}
+      </div>
+    `;
+  }
+
+  const pending = getPendingImport();
+  const importBanner = pending.length ? `
+    <div class="admin-card" style="border-color:var(--gold);background:rgba(169,122,46,0.08);">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span style="font-size:13px;">📥 <b>${pending.length}</b> nye hus${pending.length===1?"":"e"} klar til import fra koden.</span>
+        <button class="primary-btn" style="width:auto;margin:0;padding:8px 14px;" onclick="importNewHouses()">Importér</button>
+      </div>
+      <p class="small" style="margin:8px 0 0;">Sker kun når du trykker her — jeres gemte huse og billeder rører vi aldrig automatisk.</p>
+    </div>
+  ` : "";
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🏡 Admin</div>
+      <button class="link-btn" onclick="backToStart()">Log ud</button>
+    </div>
+    ${importBanner}
+    <div class="tab-row">
+      <div class="tab ${adminTab==='results'?'active':''}" onclick="adminTab='results';render()">Resultat</div>
+      <div class="tab ${(adminTab==='manage'||adminTab==='edit')?'active':''}" onclick="editingHouseId=null;formImages=[];adminTab='manage';render()">Huse</div>
+      <div class="tab ${adminTab==='add'?'active':''}" onclick="goToAddTab()">Tilføj</div>
+    </div>
+    ${body}
+  `;
+}
+</script>
+</body>
+</html>
