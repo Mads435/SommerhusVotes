@@ -232,7 +232,7 @@ const FAMILY_PASS = "Kode1234"; // same code for everyone for now — can become
 // scoped, Contents: Read and write).
 const GITHUB_OWNER = "Mads435";
 const GITHUB_REPO  = "SommerhusVotes";
-const GITHUB_TOKEN = "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";
+const GITHUB_TOKEN = "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";
 const GITHUB_PATH  = "data.json";
 const GITHUB_API   = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
 const VOTE_DEADLINE = new Date("2026-08-25T23:59:59");
@@ -776,21 +776,38 @@ async function refreshState(){
   }
 }
 async function loadState(){
-  const { data } = await ghGet();
-  if(data){
-    houses = data.houses || SEED_HOUSES;
-    votesBlob = data.votes || emptyVotesBlob();
-    importedSeedIds = new Set(data.importedSeedIds || []);
-  }else{
-    // Truly empty file (first ever run) — seed it.
+  const result = await ghGet();
+  if(result.data){
+    houses = result.data.houses || SEED_HOUSES;
+    votesBlob = result.data.votes || emptyVotesBlob();
+    importedSeedIds = new Set(result.data.importedSeedIds || []);
+  }else if(!result.error){
+    // A confirmed 404 (no error) means the file genuinely doesn't exist
+    // yet — safe to seed it for the very first time.
     const seeded = defaultState();
     const ok = await ghUpdate(() => seeded, "Initial seed");
     if(!ok){
-      // Couldn't reach GitHub at all — fall back to in-memory only, so the
-      // app still works this session (nothing will persist though).
       houses = SEED_HOUSES;
       votesBlob = emptyVotesBlob();
       importedSeedIds = new Set(SEED_HOUSES.map(h => h.id));
+    }
+  }else{
+    // A real error (bad/expired token, network issue, GitHub outage) —
+    // this must NEVER be treated as "file is empty", or it would silently
+    // overwrite (and destroy) everyone's real votes. Retry once, and if
+    // that still fails, fall back to a read-only, unsaved local view for
+    // this session — nothing gets written to GitHub in this branch.
+    await delay(800);
+    const retry = await ghGet();
+    if(retry.data){
+      houses = retry.data.houses || SEED_HOUSES;
+      votesBlob = retry.data.votes || emptyVotesBlob();
+      importedSeedIds = new Set(retry.data.importedSeedIds || []);
+    }else{
+      houses = SEED_HOUSES;
+      votesBlob = emptyVotesBlob();
+      importedSeedIds = new Set(SEED_HOUSES.map(h => h.id));
+      console.warn("Could not reach GitHub (bad token or network issue) — showing local data for this session only. Nothing was overwritten remotely. Reload once the token/connection is fixed.");
     }
   }
   FAMILIES.forEach((_, i) => { if(!votesBlob[famId(i)]) votesBlob[famId(i)] = {}; });
