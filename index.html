@@ -623,6 +623,7 @@ let currentFamId = null;
 let currentFamName = null;
 let currentVotes = {};
 let pendingFamIdx = null; // family chosen on the front page, awaiting code entry
+let voteOrder = [];       // shuffled house ids for the current family's session
 let isAdmin = false;
 let screen = "loading"; // loading | name | familyLogin | vote | done | review | closed | adminLogin | admin
 let imgIdx = {};          // per-house current image index (browsing view)
@@ -639,6 +640,17 @@ function escapeAttr(s){
 
 function addPhotoUrlRow(){
   formPhotoUrls.push("");
+  render();
+}
+function addManyPhotoUrls(){
+  const box = document.getElementById("nh-bulk-links");
+  const lines = box.value.split(/[\s,]+/).map(s => s.trim()).filter(s => /^https?:\/\//.test(s));
+  const existing = new Set(formPhotoUrls);
+  let added = 0;
+  lines.forEach(url => {
+    if(!existing.has(url)){ formPhotoUrls.push(url); existing.add(url); added++; }
+  });
+  box.value = "";
   render();
 }
 function removePhotoUrlRow(idx){
@@ -900,17 +912,34 @@ async function confirmFamilyLogin(){
   currentFamId = famId(idx);
   currentFamName = FAMILIES[idx];
   currentVotes = votesBlob[currentFamId] || {};
+  voteOrder = shuffle(houses.map(h => h.id));
   goToVotingOrDone();
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function orderedHouses(){
+  // Falls back to the natural order if no shuffle has been generated yet
+  // (e.g. voteOrder references a house that's since been removed by admin).
+  const byId = new Map(houses.map(h => [h.id, h]));
+  const ordered = (voteOrder || []).map(id => byId.get(id)).filter(Boolean);
+  houses.forEach(h => { if(!voteOrder.includes(h.id)) ordered.push(h); });
+  return ordered.length ? ordered : houses;
 }
 function goToVotingOrDone(){
   if(new Date() > VOTE_DEADLINE){ screen = "closed"; render(); return; }
-  const next = houses.find(h => !(h.id in currentVotes));
+  const next = orderedHouses().find(h => !(h.id in currentVotes));
   if(next){ screen = "vote"; }
   else{ screen = "done"; }
   render();
 }
 function backToStart(){
-  currentFamId = null; currentFamName = null; currentVotes = {}; pendingFamIdx = null; isAdmin = false;
+  currentFamId = null; currentFamName = null; currentVotes = {}; pendingFamIdx = null; isAdmin = false; voteOrder = [];
   screen = "name"; render();
 }
 
@@ -1203,10 +1232,11 @@ function renderFamilyLogin(){
 }
 
 function renderVote(){
-  const house = houses.find(h => !(h.id in currentVotes));
+  const order = orderedHouses();
+  const house = order.find(h => !(h.id in currentVotes));
   if(!house){ screen="done"; render(); return; }
   const votedCount = Object.keys(currentVotes).length;
-  const num = houses.findIndex(h=>h.id===house.id) + 1;
+  const num = order.findIndex(h=>h.id===house.id) + 1;
   app.innerHTML = `
     <div class="topbar">
       <button class="link-btn" onclick="backToStart()">&larr; Skift familie</button>
@@ -1259,11 +1289,11 @@ function renderReview(){
       <button class="link-btn" onclick="screen='done';render()">&larr; Tilbage</button>
       <span class="small">Alle huse</span>
     </div>
-    ${houses.map((house,i) => {
+    ${orderedHouses().map((house,i) => {
       const v = currentVotes[house.id];
       return `<div class="postcard" style="margin-bottom:18px;">
         ${house.soldOut ? '<div class="soldout-ribbon">UDSOLGT</div>' : ""}
-        ${imageBlock(house, {stamp:v, eyebrow:`Hus ${String(i+1).padStart(2,"0")} / ${String(houses.length).padStart(2,"0")}`})}
+        ${imageBlock(house, {stamp:v, eyebrow:`Hus ${String(i+1).padStart(2,"0")} / ${String(orderedHouses().length).padStart(2,"0")}`})}
         <div class="postcard-body">
           <h2 class="house-name">${house.name}</h2>
           <div class="rule"></div>
@@ -1397,7 +1427,10 @@ async function renderAdmin(){
           <input id="nh-soldout" type="checkbox" style="width:auto;" ${h.soldOut ? "checked" : ""}>
           <span style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);">Udsolgt</span>
         </label>
-        <label>Billed-links (ét pr. linje, med preview)</label>
+        <label>Indsæt flere links på én gang</label>
+        <textarea id="nh-bulk-links" placeholder="Ét link pr. linje – indsæt fra din browser og tryk 'Tilføj alle'"></textarea>
+        <button class="secondary-btn" onclick="addManyPhotoUrls()">📋 Tilføj alle indsatte links</button>
+        <label style="margin-top:18px;">Billed-links (ét pr. linje, med preview)</label>
         <div class="link-rows">
           ${formPhotoUrls.map((url,i)=>`
             <div class="link-row">
@@ -1407,7 +1440,7 @@ async function renderAdmin(){
             </div>
           `).join("") || '<p class="small">Ingen billed-links endnu.</p>'}
         </div>
-        <button class="secondary-btn" onclick="addPhotoUrlRow()">+ Tilføj billed-link</button>
+        <button class="secondary-btn" onclick="addPhotoUrlRow()">+ Tilføj ét billed-link</button>
         <label>Illustration (vises hvis der ikke er nogen billed-links)</label>
         <select id="nh-art">
           ${Object.entries(ART_LABELS).map(([key,label])=>
