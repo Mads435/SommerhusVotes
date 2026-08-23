@@ -283,7 +283,7 @@ function loadGithubToken(){
   const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
   if(stored) GITHUB_TOKEN = stored;
 }
-const VOTE_DEADLINE = new Date("2026-08-25T23:59:59");
+const VOTE_DEADLINE = new Date("2026-08-26T23:59:59");
 
 const SEED_HOUSES = [
   {
@@ -1219,7 +1219,7 @@ function renderName(){
       <div class="brand">🏡 Sommerhus<span>-afstemning</span></div>
       <button class="link-btn" onclick="screen='adminLogin';render()">Admin</button>
     </div>
-    <p style="color:var(--muted);font-size:14px;margin-top:0;">Vælg jeres navn for at like eller dislike husene. I kan ændre jeres stemmer indtil <b>25. august</b>.</p>
+    <p style="color:var(--muted);font-size:14px;margin-top:0;">Vælg jeres navn for at like eller dislike husene. I kan ændre jeres stemmer indtil <b>26. august</b>.</p>
     <div class="fam-list">
       ${FAMILIES.map((f,i)=>`
         <button class="fam-btn" onclick="selectFamily(${i})">
@@ -1312,7 +1312,7 @@ function renderDone(){
     <div class="center-msg">
       <span class="emoji">🥂</span>
       <h2 class="display" style="margin-bottom:6px;">Alle huse gennemgået</h2>
-      <p style="color:var(--muted);font-size:14px;">Tak for jeres stemmer, ${currentFamName}. I kan ændre jeres valg indtil <b>25. august</b>.</p>
+      <p style="color:var(--muted);font-size:14px;">Tak for jeres stemmer, ${currentFamName}. I kan ændre jeres valg indtil <b>26. august</b>.</p>
       <button class="primary-btn" onclick="screen='review';render()">Se og ret jeres svar</button>
     </div>
   `;
