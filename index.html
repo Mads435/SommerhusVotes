@@ -247,7 +247,10 @@ const FAMILIES = [
 ];
 const ADMIN_USER = "Admin";
 const ADMIN_PASS = "Kode1234";
-const FAMILY_PASS = "Kode1234"; // same code for everyone for now — can become per-family codes later
+// One unique code per family (same order as FAMILIES below).
+const FAMILY_CODES = ["Bo2658", "Iu6937", "Hz1495", "Ff1501", "Sx9592", "Fi0656"];
+const MAX_LOGIN_ATTEMPTS = 3;
+const LOGIN_LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 // ---- Storage backend: your own private GitHub repo ----
 // This replaces Claude's persistent storage (which required a paid Claude
@@ -624,6 +627,11 @@ let currentFamName = null;
 let currentVotes = {};
 let pendingFamIdx = null; // family chosen on the front page, awaiting code entry
 let voteOrder = [];       // shuffled house ids for the current family's session
+let loginAttempts = {};   // famIdx -> {count, lockoutUntil}
+function getAttemptState(idx){
+  if(!loginAttempts[idx]) loginAttempts[idx] = {count:0, lockoutUntil:0};
+  return loginAttempts[idx];
+}
 let isAdmin = false;
 let screen = "loading"; // loading | name | familyLogin | vote | done | review | closed | adminLogin | admin
 let imgIdx = {};          // per-house current image index (browsing view)
@@ -901,13 +909,24 @@ async function confirmFamilyLogin(){
   const input = document.getElementById("fam-code");
   const errEl = document.getElementById("fam-login-err");
   if(!input) return;
-  if(input.value !== FAMILY_PASS){
-    if(errEl) errEl.textContent = "Forkert kode. Prøv igen.";
+  const idx = pendingFamIdx;
+  const st = getAttemptState(idx);
+  if(input.value !== FAMILY_CODES[idx]){
+    st.count++;
+    if(st.count >= MAX_LOGIN_ATTEMPTS){
+      st.lockoutUntil = Date.now() + LOGIN_LOCKOUT_MS;
+      st.count = 0;
+      render(); // switches to the lockout view
+      return;
+    }
+    const left = MAX_LOGIN_ATTEMPTS - st.count;
+    if(errEl) errEl.textContent = `Forkert kode. ${left} forsøg tilbage.`;
     input.value = "";
     input.focus();
     return;
   }
-  const idx = pendingFamIdx;
+  st.count = 0;
+  st.lockoutUntil = 0;
   pendingFamIdx = null;
   currentFamId = famId(idx);
   currentFamName = FAMILIES[idx];
@@ -1213,6 +1232,22 @@ function renderName(){
 
 function renderFamilyLogin(){
   const name = FAMILIES[pendingFamIdx];
+  const st = getAttemptState(pendingFamIdx);
+  const now = Date.now();
+  if(st.lockoutUntil > now){
+    const minsLeft = Math.ceil((st.lockoutUntil - now) / 60000);
+    app.innerHTML = `
+      <div class="topbar">
+        <button class="link-btn" onclick="screen='name';pendingFamIdx=null;render()">&larr; Tilbage</button>
+      </div>
+      <div class="center-msg" style="margin-top:50px;">
+        <span class="emoji">⏳</span>
+        <h2 class="display" style="margin-bottom:6px;">${name}</h2>
+        <p style="color:var(--muted);font-size:14px;">For mange forkerte forsøg. Prøv igen om ca. ${minsLeft} minut${minsLeft===1?"":"ter"}.</p>
+      </div>
+    `;
+    return;
+  }
   app.innerHTML = `
     <div class="topbar">
       <button class="link-btn" onclick="screen='name';pendingFamIdx=null;render()">&larr; Tilbage</button>
