@@ -120,6 +120,17 @@
     position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
     background:rgba(43,38,32,0.8);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer;
   }
+  .link-rows{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
+  .link-row{display:flex;align-items:center;gap:8px;}
+  .link-row-thumb{
+    width:38px;height:38px;border-radius:4px;object-fit:cover;flex-shrink:0;
+    background:var(--linen-dim);
+  }
+  .link-row input{flex:1;font-size:12px;padding:8px 10px;}
+  .link-row-remove{
+    flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;
+    background:rgba(43,38,32,0.12);color:var(--ink);font-size:12px;line-height:1;
+  }
 
   .postcard-body{padding:26px 24px 24px;position:relative;}
   .postcard-body::before{
@@ -603,7 +614,7 @@ let screen = "loading"; // loading | name | familyLogin | vote | done | review |
 let imgIdx = {};          // per-house current image index (browsing view)
 let adminTab = "results"; // results | manage | add | edit
 let editingHouseId = null;
-let formImages = [];      // images currently attached to the open add/edit form
+let formPhotoUrls = [];  // photo links currently attached to the open add/edit form
 
 const app = document.getElementById("app");
 const famId = i => "f" + (i+1);
@@ -612,44 +623,12 @@ function escapeAttr(s){
   return String(s ?? "").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
 }
 
-// Reads a photo chosen from the device, scales it down client-side (canvas)
-// and returns it as a compact base64 data URL. No network request at all —
-// this is what actually fixes the hotlink/CSP problem, since the image is
-// never re-fetched from an external server once uploaded.
-function resizeImageFile(file){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const maxDim = 700;
-        let w = img.width, h = img.height;
-        if(w > maxDim || h > maxDim){
-          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
-          else{ w = Math.round(w * maxDim / h); h = maxDim; }
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.62));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-async function onFormImagesSelected(input){
-  const files = Array.from(input.files || []);
-  for(const f of files){
-    try{ formImages.push(await resizeImageFile(f)); }
-    catch(e){ console.error(e); }
-  }
+function addPhotoUrlRow(){
+  formPhotoUrls.push("");
   render();
 }
-function removeFormImage(idx){
-  formImages.splice(idx, 1);
+function removePhotoUrlRow(idx){
+  formPhotoUrls.splice(idx, 1);
   render();
 }
 // Every house gets a hand-drawn travel-poster style illustration, generated
@@ -993,11 +972,9 @@ async function saveHouseFromForm(){
     if(errEl) errEl.textContent = "Navn og link er påkrævet.";
     return;
   }
-  const images = formImages.slice();
-  const photoUrls = document.getElementById("nh-photourls").value
-    .split("\n").map(s => s.trim()).filter(Boolean);
+  const photoUrls = formPhotoUrls.map(s => s.trim()).filter(Boolean);
   const id = editingHouseId || ("h" + Date.now());
-  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, images, photoUrls};
+  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls};
 
   const ok = await ghUpdate(draft => {
     draft.houses = editingHouseId
@@ -1011,26 +988,26 @@ async function saveHouseFromForm(){
     return;
   }
   editingHouseId = null;
-  formImages = [];
+  formPhotoUrls = [];
   adminTab = "manage";
   render();
 }
 function startEditHouse(id){
   editingHouseId = id;
   const h = houses.find(x => x.id === id);
-  formImages = h && h.images ? h.images.slice() : [];
+  formPhotoUrls = h && h.photoUrls ? h.photoUrls.slice() : [];
   adminTab = "edit";
   render();
 }
 function goToAddTab(){
   editingHouseId = null;
-  formImages = [];
+  formPhotoUrls = [];
   adminTab = "add";
   render();
 }
 function cancelEditHouse(){
   editingHouseId = null;
-  formImages = [];
+  formPhotoUrls = [];
   adminTab = "manage";
   render();
 }
@@ -1374,18 +1351,18 @@ async function renderAdmin(){
           <input id="nh-soldout" type="checkbox" style="width:auto;" ${h.soldOut ? "checked" : ""}>
           <span style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);">Udsolgt</span>
         </label>
-        <label>Billeder (upload fra din enhed)</label>
-        <input id="nh-file" type="file" accept="image/*" multiple onchange="onFormImagesSelected(this)">
-        <p class="small" style="margin:4px 0 0;">Billederne gemmes direkte i appen — ingen eksterne links. Hold gerne til 2-4 billeder pr. hus.</p>
-        <div class="thumb-row">
-          ${formImages.map((src,i)=>`
-            <div class="thumb"><img src="${src}"><button onclick="removeFormImage(${i})">✕</button></div>
-          `).join("")}
+        <label>Billed-links (ét pr. linje, med preview)</label>
+        <div class="link-rows">
+          ${formPhotoUrls.map((url,i)=>`
+            <div class="link-row">
+              <img class="link-row-thumb" src="${escapeAttr(url)}" alt="" onerror="this.style.visibility='hidden'" onload="this.style.visibility='visible'">
+              <input type="text" value="${escapeAttr(url)}" placeholder="https://..." oninput="formPhotoUrls[${i}]=this.value" onchange="render()">
+              <button class="link-row-remove" onclick="removePhotoUrlRow(${i})">✕</button>
+            </div>
+          `).join("") || '<p class="small">Ingen billed-links endnu.</p>'}
         </div>
-        ${formImages.length ? `<p class="small" style="margin:6px 0 0;">Billeder her fylder ca. ${(new Blob(formImages).size/1e6).toFixed(1)} MB.</p>` : ""}
-        <label>Billed-links (ét pr. linje) — bruges kun hvis der ikke er uploadet billeder ovenfor</label>
-        <textarea id="nh-photourls" placeholder="https://...">${(h.photoUrls||[]).join("\n")}</textarea>
-        <label>Illustration (vises hvis der hverken er uploadet billeder eller billed-links)</label>
+        <button class="secondary-btn" onclick="addPhotoUrlRow()">+ Tilføj billed-link</button>
+        <label>Illustration (vises hvis der ikke er nogen billed-links)</label>
         <select id="nh-art">
           ${Object.entries(ART_LABELS).map(([key,label])=>
             `<option value="${key}" ${(h.art||"vineyard-pool")===key?"selected":""}>${label}</option>`
@@ -1417,7 +1394,7 @@ async function renderAdmin(){
     ${importBanner}
     <div class="tab-row">
       <div class="tab ${adminTab==='results'?'active':''}" onclick="adminTab='results';render()">Resultat</div>
-      <div class="tab ${(adminTab==='manage'||adminTab==='edit')?'active':''}" onclick="editingHouseId=null;formImages=[];adminTab='manage';render()">Huse</div>
+      <div class="tab ${(adminTab==='manage'||adminTab==='edit')?'active':''}" onclick="editingHouseId=null;formPhotoUrls=[];adminTab='manage';render()">Huse</div>
       <div class="tab ${adminTab==='add'?'active':''}" onclick="goToAddTab()">Tilføj</div>
     </div>
     ${body}
