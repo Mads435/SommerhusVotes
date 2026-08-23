@@ -1308,6 +1308,9 @@ function renderAdminLogin(){
     <p id="admin-err" style="color:var(--terracotta);font-size:13px;min-height:16px;"></p>
     <button class="primary-btn" onclick="tryAdminLogin()">Log ind</button>
   `;
+  const onEnter = e => { if(e.key === "Enter") tryAdminLogin(); };
+  document.getElementById("admin-user").addEventListener("keydown", onEnter);
+  document.getElementById("admin-pass").addEventListener("keydown", onEnter);
 }
 
 async function renderAdmin(){
