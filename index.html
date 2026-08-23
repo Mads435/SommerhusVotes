@@ -900,7 +900,10 @@ async function init(){
     return;
   }
   await loadState();
-  screen = "name";
+  goToNameOrClosed();
+}
+function goToNameOrClosed(){
+  screen = (new Date() > VOTE_DEADLINE) ? "closed" : "name";
   render();
 }
 init();
@@ -966,7 +969,7 @@ function goToVotingOrDone(){
 }
 function backToStart(){
   currentFamId = null; currentFamName = null; currentVotes = {}; pendingFamIdx = null; isAdmin = false; voteOrder = [];
-  screen = "name"; render();
+  goToNameOrClosed();
 }
 
 /* ---------------- CUSTOM CONFIRM (native confirm()/alert() are blocked
