@@ -994,8 +994,10 @@ async function saveHouseFromForm(){
     return;
   }
   const images = formImages.slice();
+  const photoUrls = document.getElementById("nh-photourls").value
+    .split("\n").map(s => s.trim()).filter(Boolean);
   const id = editingHouseId || ("h" + Date.now());
-  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, images};
+  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, images, photoUrls};
 
   const ok = await ghUpdate(draft => {
     draft.houses = editingHouseId
@@ -1381,7 +1383,9 @@ async function renderAdmin(){
           `).join("")}
         </div>
         ${formImages.length ? `<p class="small" style="margin:6px 0 0;">Billeder her fylder ca. ${(new Blob(formImages).size/1e6).toFixed(1)} MB.</p>` : ""}
-        <label>Illustration (vises indtil der er uploadet billeder)</label>
+        <label>Billed-links (ét pr. linje) — bruges kun hvis der ikke er uploadet billeder ovenfor</label>
+        <textarea id="nh-photourls" placeholder="https://...">${(h.photoUrls||[]).join("\n")}</textarea>
+        <label>Illustration (vises hvis der hverken er uploadet billeder eller billed-links)</label>
         <select id="nh-art">
           ${Object.entries(ART_LABELS).map(([key,label])=>
             `<option value="${key}" ${(h.art||"vineyard-pool")===key?"selected":""}>${label}</option>`
