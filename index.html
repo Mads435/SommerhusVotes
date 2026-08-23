@@ -79,8 +79,22 @@
   .img-wrap svg{width:100%;height:100%;display:block;}
   .img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
   .img-eyebrow{
-    position:absolute;top:18px;left:20px;color:#fff;font-size:10px;letter-spacing:3px;
+    position:absolute;top:18px;right:20px;color:#fff;font-size:10px;letter-spacing:3px;
     font-weight:600;text-transform:uppercase;opacity:0.92;text-shadow:0 1px 4px rgba(0,0,0,0.5);
+  }
+  .img-tag{
+    position:absolute;top:16px;left:16px;z-index:2;background:var(--ink);color:var(--linen);
+    padding:5px 10px 5px 8px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;
+    transform:rotate(-4deg);box-shadow:2px 3px 6px rgba(0,0,0,0.3);border-radius:1px;
+  }
+  .img-tag::after{
+    content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);
+    width:8px;height:8px;border-radius:50%;background:var(--gold);border:1px solid var(--ink);
+  }
+  .loc-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:16px;}
+  .maplink{
+    font-size:11px;letter-spacing:0.3px;color:var(--ink);text-decoration:none;
+    border-bottom:1px solid var(--gold);padding-bottom:1px;font-weight:600;white-space:nowrap;
   }
   .img-nav{
     position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;
@@ -272,7 +286,7 @@ const SEED_HOUSES = [
   {
     id:"h1", name:"Villa i Suze-la-Rousse", location:"Suze-la-Rousse, Drôme, Provence, Frankrig",
     link:"https://www.novasol.dk/feriehuse/suze-la-rousse-fpd493",
-    rooms:24, rating:5, price:null, soldOut:false, art:"vineyard-pool",
+    rooms:24, rating:5, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"vineyard-pool",
     photoUrls:[
       "https://image.novasol.com/pic/600/fpd/fpd493_view_02.jpg",
       "https://image.novasol.com/pic/600/fpd/fpd493_pool_01.jpg",
@@ -284,7 +298,7 @@ const SEED_HOUSES = [
   {
     id:"h2", name:"Familiehus med pool nær Lectoure", location:"Saint-Clar, Gers, Occitanie, Frankrig",
     link:"https://landfolk.com/da/l/9dc9c49d",
-    rooms:24, rating:null, price:null, soldOut:false, art:"garden-pool",
+    rooms:24, rating:null, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"garden-pool",
     photoUrls:[
       "https://landfolk-storage.imgix.net/jcc827o2tm3xhehqr675w395aewl?auto=compress%2Cformat&cs=srgb&fit=crop&w=1200&h=1200",
       "https://landfolk-storage.imgix.net/y1acxlysb9cbpmrtj2e1jx2pc7ki?auto=compress%2Cformat&cs=srgb&fit=crop&w=1200&h=800",
@@ -295,7 +309,7 @@ const SEED_HOUSES = [
   {
     id:"h3", name:"Vingårdsvilla i La Celle", location:"La Celle, Var, Provence, Frankrig",
     link:"https://www.novasol.dk/feriehuse/la-celle-fcs024",
-    rooms:22, rating:5, price:null, soldOut:false, art:"vineyard-pool",
+    rooms:22, rating:5, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"vineyard-pool",
     photoUrls:[
       "https://image.novasol.com/pic/600/fcs/fcs024_pool_01.jpg",
       "https://image.novasol.com/pic/600/fcs/fcs024_outdoor_01.jpg",
@@ -307,7 +321,7 @@ const SEED_HOUSES = [
   {
     id:"h4", name:"Feriehus med sauna i Fortunago", location:"Fortunago, Lombardiet, Italien",
     link:"https://www.feline.dk/search/Y2VJuXh6TudHUZet8cWq-vxhDgwMDSIMQAAA/140-ILH008",
-    rooms:27, rating:4, price:null, soldOut:false, art:"sauna",
+    rooms:27, rating:4, price:null, soldOut:false, country:"Italien", countryCode:"IT", art:"sauna",
     photoUrls:[
       "https://image.novasol.com/pic/600/ilh/ilh008_pool_01.jpg",
       "https://image.novasol.com/pic/600/ilh/ilh008_outdoor_01.jpg",
@@ -319,7 +333,7 @@ const SEED_HOUSES = [
   {
     id:"h5", name:"Toscansk gård i Cetona", location:"Cetona, Toscana, Italien",
     link:"https://www.feline.dk/search/Y2VJuXh6TudHUZet8cWq-vxhDgwMDSIMQAAA/140-ITS560",
-    rooms:20, rating:5, price:2320, soldOut:false, art:"tuscan",
+    rooms:20, rating:5, price:2320, soldOut:false, country:"Italien", countryCode:"IT", art:"tuscan",
     photoUrls:[
       "https://image.novasol.com/pic/600/its/its560_pool_01.jpg",
       "https://image.novasol.com/pic/600/its/its560_main_01.jpg",
@@ -331,7 +345,7 @@ const SEED_HOUSES = [
   {
     id:"h6", name:"Landejendom med pool i Apecchio", location:"Apecchio, Marche, Italien",
     link:"https://www.novasol.dk/feriehuse/apecchio-imm109",
-    rooms:27, rating:3, price:null, soldOut:false, art:"mountain",
+    rooms:27, rating:3, price:null, soldOut:false, country:"Italien", countryCode:"IT", art:"mountain",
     photoUrls:[
       "https://image.novasol.com/pic/600/imm/imm109_pool_01.jpg",
       "https://image.novasol.com/pic/600/imm/imm109_outdoor_01.jpg",
@@ -343,7 +357,7 @@ const SEED_HOUSES = [
   {
     id:"h7", name:"Casa Primavera, stenvilla ved skovsøen", location:"Costalunga, Piemonte, Italien",
     link:"https://www.airbnb.dk/rooms/49203265",
-    rooms:7, rating:4.5, price:7955, soldOut:false, art:"vineyard-pool",
+    rooms:7, rating:4.5, price:7955, soldOut:false, country:"Italien", countryCode:"IT", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/miso/Hosting-49203265/original/aeba3fd9-dbc8-4f69-8848-50a3f406fe92.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/14599faa-7b22-45c6-acfb-510a90f80ddb.jpg?im_w=720",
@@ -355,7 +369,7 @@ const SEED_HOUSES = [
   {
     id:"h8", name:"XXL-villa \"Piemonte\" med pool og spabad", location:"Tigliole, Piemonte, Italien",
     link:"https://www.airbnb.dk/rooms/22566321",
-    rooms:8, rating:4.0, price:10782, soldOut:false, art:"vineyard-pool",
+    rooms:8, rating:4.0, price:10782, soldOut:false, country:"Italien", countryCode:"IT", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-22566321/original/7fad850f-df81-4643-a3e8-7f1e13e3bc79.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-22566321/original/c4710b4a-86e7-4742-8b1a-814aa9ba7b9e.jpeg?im_w=720",
@@ -367,7 +381,7 @@ const SEED_HOUSES = [
   {
     id:"h9", name:"Romignano Vinfarm i Chianti", location:"Terranuova Bracciolini, Toscana, Italien",
     link:"https://www.airbnb.dk/rooms/5546225",
-    rooms:9, rating:4.5, price:13355, soldOut:false, art:"tuscan",
+    rooms:9, rating:4.5, price:13355, soldOut:false, country:"Italien", countryCode:"IT", art:"tuscan",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/45b77227-6dad-49c0-9c18-94d9cc836787.jpg?im_w=720",
       "https://a0.muscache.com/im/pictures/76b59ecb-f6ec-4d2c-bcb3-061eb22bdb2c.jpg?im_w=720",
@@ -379,7 +393,7 @@ const SEED_HOUSES = [
   {
     id:"h10", name:"Toscansk bondegård nær Siena", location:"Sovicille, Siena, Toscana, Italien",
     link:"https://www.airbnb.dk/rooms/22620502",
-    rooms:8, rating:5.0, price:11773, soldOut:false, art:"tuscan",
+    rooms:8, rating:5.0, price:11773, soldOut:false, country:"Italien", countryCode:"IT", art:"tuscan",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MjI2MjA1MDI%3D/original/721ca2d4-5acf-4544-9cec-02191738061c.png?im_w=720",
       "https://a0.muscache.com/im/pictures/airflow/Hosting-22620502/original/09ac80af-37f3-4946-8f3f-5296c6c63d1c.jpg?im_w=720",
@@ -391,7 +405,7 @@ const SEED_HOUSES = [
   {
     id:"h11", name:"Afsides villa med udsigt", location:"Borgo a Mozzano, Toscana, Italien",
     link:"https://www.airbnb.dk/rooms/743925050993194909",
-    rooms:7, rating:5.0, price:8679, soldOut:false, art:"mountain",
+    rooms:7, rating:5.0, price:8679, soldOut:false, country:"Italien", countryCode:"IT", art:"mountain",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6NzQzOTI1MDUwOTkzMTk0OTA5/original/149c56a0-b1bb-416e-ba6a-d6a46b2b7e8c.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/miso/Hosting-743925050993194909/original/52e2d10b-68a3-4b65-bc9f-ed3e107334c8.jpeg?im_w=720",
@@ -403,7 +417,7 @@ const SEED_HOUSES = [
   {
     id:"h12", name:"Villa La Camillina, historisk vingårdsvilla", location:"Canelli, Piemonte, Italien",
     link:"https://www.airbnb.dk/rooms/1335529618252138328",
-    rooms:14, rating:4.5, price:12881, soldOut:false, art:"vineyard-pool",
+    rooms:14, rating:4.5, price:12881, soldOut:false, country:"Italien", countryCode:"IT", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/miso/Hosting-1335529618252138328/original/c0b6fe36-0562-4816-aa98-d10c8a6a898f.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/miso/Hosting-1335529618252138328/original/19780c61-f76c-4d3d-bcb8-7adbc97ab0ea.jpeg?im_w=720",
@@ -415,7 +429,7 @@ const SEED_HOUSES = [
   {
     id:"h13", name:"Stenvilla med udsigt i Casentino", location:"Bibbiena, Toscana, Italien",
     link:"https://www.airbnb.dk/rooms/14798395",
-    rooms:9, rating:5.0, price:10896, soldOut:false, art:"tuscan",
+    rooms:9, rating:5.0, price:10896, soldOut:false, country:"Italien", countryCode:"IT", art:"tuscan",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/7e063756-1c69-462c-aeda-cc241e49f4ef.jpg?im_w=720",
       "https://a0.muscache.com/im/pictures/4116a004-dbbd-4b8a-baed-b50558fe0792.jpg?im_w=720",
@@ -427,7 +441,7 @@ const SEED_HOUSES = [
   {
     id:"h14", name:"Historisk Villa Di Corsano nær Siena", location:"Monteroni d'Arbia, Toscana, Italien",
     link:"https://www.airbnb.dk/rooms/927554",
-    rooms:10, rating:5.0, price:11552, soldOut:false, art:"tuscan",
+    rooms:10, rating:5.0, price:11552, soldOut:false, country:"Italien", countryCode:"IT", art:"tuscan",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6OTI3NTU0/original/018a5540-6d39-4f0a-a1a1-caa07803b275.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6OTI3NTU0/original/38516ff7-48a1-41ed-ae44-a8868b8e2c4a.jpeg?im_w=720",
@@ -439,7 +453,7 @@ const SEED_HOUSES = [
   {
     id:"h15", name:"Mas Aarvik og Vega i Provence", location:"Barbentane, Provence, Frankrig",
     link:"https://www.airbnb.dk/rooms/26827187",
-    rooms:9, rating:5.0, price:null, soldOut:false, art:"vineyard-pool",
+    rooms:9, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/a70c67b3-f98b-426b-bc14-7102939d75f0.jpg?im_w=720",
       "https://a0.muscache.com/im/pictures/e2267610-89b0-4693-9e34-d28ac6ab74fe.jpg?im_w=720",
@@ -451,7 +465,7 @@ const SEED_HOUSES = [
   {
     id:"h16", name:"Ferme Émeraude med spa og indendørs pool", location:"Gérardmer, Vosges, Frankrig",
     link:"https://www.airbnb.dk/rooms/1449225032402937879",
-    rooms:11, rating:5.0, price:null, soldOut:false, art:"sauna",
+    rooms:11, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"sauna",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1449225032402937879/original/ce54f8ef-ffe6-4b43-8931-07a609d31c4d.png?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1449225032402937879/original/b92f6b92-9765-445f-9481-59a5a7128bd7.png?im_w=720",
@@ -463,7 +477,7 @@ const SEED_HOUSES = [
   {
     id:"h17", name:"Villa Martinière med stor pool", location:"Saint-Georges-des-Coteaux, Charente-Maritime, Frankrig",
     link:"https://www.airbnb.dk/rooms/704068575909946736",
-    rooms:9, rating:5.0, price:null, soldOut:false, art:"garden-pool",
+    rooms:9, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"garden-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/miso/Hosting-704068575909946736/original/1bd485e5-6959-4cd8-9944-ac8928a3fd36.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/miso/Hosting-704068575909946736/original/d0b15eed-50e2-4fba-aeec-a6e5cdcc31f4.jpeg?im_w=720",
@@ -475,7 +489,7 @@ const SEED_HOUSES = [
   {
     id:"h18", name:"Maison Cantalauze, vingård i Minervois", location:"Trèbes, Languedoc-Roussillon, Frankrig",
     link:"https://www.airbnb.dk/rooms/7777896",
-    rooms:9, rating:5.0, price:null, soldOut:false, art:"vineyard-pool",
+    rooms:9, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-7777896/original/5b23c975-e3ea-451b-8dc1-d9607b5987a7.png?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-7777896/original/45e12ab2-5736-43d9-94b9-7ac0af9dce3d.png?im_w=720",
@@ -487,7 +501,7 @@ const SEED_HOUSES = [
   {
     id:"h19", name:"Les Rangeardières ved Angers", location:"Saint-Barthélemy-d'Anjou, Pays de la Loire, Frankrig",
     link:"https://www.airbnb.dk/rooms/1085391938298001220",
-    rooms:10, rating:5.0, price:null, soldOut:false, art:"garden-pool",
+    rooms:10, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"garden-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/prohost-api/Hosting-1085391938298001220/original/9e68c119-3ade-458b-a2da-3ec4d72b3469.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/prohost-api/Hosting-1085391938298001220/original/88438f11-81e9-489c-8976-7ec9da7c1b5f.jpeg?im_w=720",
@@ -499,7 +513,7 @@ const SEED_HOUSES = [
   {
     id:"h20", name:"Château de la Loire, Cinq-Mars-la-Pile", location:"Cinq-Mars-la-Pile, Loire-dalen, Frankrig",
     link:"https://www.airbnb.dk/rooms/912169960998624226",
-    rooms:10, rating:5.0, price:null, soldOut:false, art:"mountain",
+    rooms:10, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"mountain",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6OTEyMTY5OTYwOTk4NjI0MjI2/original/ad1b1b34-fbd7-40fc-81c6-75a3dc33d143.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-912169960998624226/original/620674aa-f5d0-4001-a824-d2534dbd395f.png?im_w=720",
@@ -511,7 +525,7 @@ const SEED_HOUSES = [
   {
     id:"h21", name:"Harmony Homes Montereau", location:"Montereau, Loire-dalen, Frankrig",
     link:"https://www.airbnb.dk/rooms/840624697207518093",
-    rooms:7, rating:5.0, price:null, soldOut:false, art:"garden-pool",
+    rooms:7, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"garden-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-840624697207518093/original/54f30578-e8df-480c-816e-829716574988.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-840624697207518093/original/24798db4-8878-4ef4-9801-6b6976984ef1.jpeg?im_w=720",
@@ -523,7 +537,7 @@ const SEED_HOUSES = [
   {
     id:"h22", name:"Les Deux Lavoirs ved Vercors", location:"La Baume-Cornillane, Auvergne-Rhône-Alpes, Frankrig",
     link:"https://www.airbnb.dk/rooms/1359234562369785235",
-    rooms:9, rating:5.0, price:null, soldOut:false, art:"mountain",
+    rooms:9, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"mountain",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/miso/Hosting-1359234562369785235/original/2d70e222-41f7-4da2-8df4-10b8d133e18e.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/miso/Hosting-1359234562369785235/original/b400e2b0-c8e8-493b-b051-ca4db25ab01c.jpeg?im_w=720",
@@ -535,7 +549,7 @@ const SEED_HOUSES = [
   {
     id:"h23", name:"Bastide de Stan med sauna og jacuzzi", location:"Caderousse, Provence, Frankrig",
     link:"https://www.airbnb.dk/rooms/1081827371483736126",
-    rooms:11, rating:5.0, price:null, soldOut:false, art:"sauna",
+    rooms:11, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"sauna",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1081827371483736126/original/ea1acf36-e055-4f76-b0c4-ff1b4cc80f1c.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/miso/Hosting-1081827371483736126/original/4a784308-d9a0-48f8-ac6d-bddf3f84c98f.jpeg?im_w=720",
@@ -547,7 +561,7 @@ const SEED_HOUSES = [
   {
     id:"h24", name:"Provence-villa ved golfbanen", location:"Mallemort, Provence, Frankrig",
     link:"https://www.airbnb.dk/rooms/24652657",
-    rooms:8, rating:5.0, price:null, soldOut:false, art:"vineyard-pool",
+    rooms:8, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-24652657/original/a963fa65-1ec7-4212-befe-843b443d398d.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/63e7d26d-d21c-4f16-ad27-3cfae0bc165a.jpg?im_w=720",
@@ -559,7 +573,7 @@ const SEED_HOUSES = [
   {
     id:"h25", name:"Villa i Cannes med havudsigt", location:"Cannes, Côte d'Azur, Frankrig",
     link:"https://www.airbnb.dk/rooms/1344918802663562103",
-    rooms:7, rating:5.0, price:null, soldOut:false, art:"coast",
+    rooms:7, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"coast",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1344918802663562103/original/06471689-f3b2-4ce9-a042-13567b404e50.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/miso/Hosting-1344918802663562103/original/6254def8-eeb4-491c-b0b2-371a60acd841.jpeg?im_w=720",
@@ -571,7 +585,7 @@ const SEED_HOUSES = [
   {
     id:"h26", name:"Privat fyrreskovs-ejendom i Côte d'Azur", location:"La Londe-les-Maures, Côte d'Azur, Frankrig",
     link:"https://www.airbnb.dk/rooms/1354034472762069680",
-    rooms:6, rating:5.0, price:null, soldOut:false, art:"vineyard-pool",
+    rooms:6, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"vineyard-pool",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTM1NDAzNDQ3Mjc2MjA2OTY4MA==/original/d0b7e345-db99-48ac-a5e8-b6ab6ef676bf.jpeg?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTM1NDAzNDQ3Mjc2MjA2OTY4MA==/original/ed48d146-e364-4906-84ed-d3d4469fe03a.jpeg?im_w=720",
@@ -583,7 +597,7 @@ const SEED_HOUSES = [
   {
     id:"h27", name:"PROVENZA, bondegård med opvarmet pool", location:"Tourves, Provence, Frankrig",
     link:"https://www.airbnb.dk/rooms/1621004505037269027",
-    rooms:5, rating:5.0, price:null, soldOut:false, art:"tuscan",
+    rooms:5, rating:5.0, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"tuscan",
     photoUrls:[
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1621004505037269027/original/bb204581-0e85-4fa1-9736-823793ae1d9c.png?im_w=720",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1621004505037269027/original/b3a49fc2-2cc8-453c-b163-9273ae0a7ef7.png?im_w=720",
@@ -595,7 +609,7 @@ const SEED_HOUSES = [
   {
     id:"h28", name:"Vivaldi Hotel", location:"Puteaux, Île-de-France, Frankrig",
     link:"https://www.airbnb.dk/rooms/1662941915185071048",
-    rooms:null, rating:4.5, price:null, soldOut:false, art:"garden-pool"
+    rooms:null, rating:4.5, price:null, soldOut:false, country:"Frankrig", countryCode:"FR", art:"garden-pool"
   }
 ];
 const ART_LABELS = {
@@ -967,6 +981,8 @@ async function saveHouseFromForm(){
   const price = document.getElementById("nh-price").value ? parseInt(document.getElementById("nh-price").value) : null;
   const art = document.getElementById("nh-art").value;
   const soldOut = document.getElementById("nh-soldout").checked;
+  const country = document.getElementById("nh-country").value.trim();
+  const countryCode = document.getElementById("nh-countrycode").value.trim().toUpperCase();
   const errEl = document.getElementById("form-error");
   if(!name || !link){
     if(errEl) errEl.textContent = "Navn og link er påkrævet.";
@@ -974,7 +990,7 @@ async function saveHouseFromForm(){
   }
   const photoUrls = formPhotoUrls.map(s => s.trim()).filter(Boolean);
   const id = editingHouseId || ("h" + Date.now());
-  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls};
+  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls, country, countryCode};
 
   const ok = await ghUpdate(draft => {
     draft.houses = editingHouseId
@@ -1043,6 +1059,7 @@ function imageBlock(house, opts){
   opts = opts || {};
   const stampHtml = opts.stamp ? `<div class="stamp ${opts.stamp==='like'?'ok':''}">${opts.stamp==='like'?'Elsket':'Nej tak'}</div>` : "";
   const eyebrow = opts.eyebrow ? `<div class="img-eyebrow">${opts.eyebrow}</div>` : "";
+  const countryTag = house.countryCode ? `<div class="img-tag">${house.countryCode} · ${house.country}</div>` : "";
   const uploaded = house.images && house.images.length;
   const imgs = uploaded ? house.images : ((house.photoUrls && house.photoUrls.length) ? house.photoUrls : []);
   if(imgs.length){
@@ -1061,12 +1078,12 @@ function imageBlock(house, opts){
     const onerrorAttr = uploaded ? "" : ` onerror="this.onerror=null;this.outerHTML=sceneSVG('${house.art}')"`;
     return `<div class="img-wrap">
         <img src="${imgs[idx]}" alt="${house.name}"${onerrorAttr}>
-        ${eyebrow}${nav}${dots}${stampHtml}
+        ${countryTag}${eyebrow}${nav}${dots}${stampHtml}
       </div>`;
   }
   return `<div class="img-wrap">
       ${sceneSVG(house.art)}
-      ${eyebrow}
+      ${countryTag}${eyebrow}
       <a class="photo-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se billeder ↗</a>
       ${stampHtml}
     </div>`;
@@ -1182,7 +1199,10 @@ function renderVote(){
       <div class="postcard-body">
         <h2 class="house-name">${house.name}</h2>
         <div class="rule"></div>
-        <p class="house-loc">${house.location||""}</p>
+        <div class="loc-row">
+          <p class="house-loc" style="margin:0;">${house.location||""}</p>
+          <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Kort ↗</a>
+        </div>
         ${metaChips(house)}
         <p class="small" style="margin:0 0 10px;">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr. pr. par" : "Se pris på hjemmesiden"}</p>
         <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se hele opslaget ↗</a>
@@ -1228,7 +1248,10 @@ function renderReview(){
         <div class="postcard-body">
           <h2 class="house-name">${house.name}</h2>
           <div class="rule"></div>
-          <p class="house-loc">${house.location||""}</p>
+          <div class="loc-row">
+            <p class="house-loc" style="margin:0;">${house.location||""}</p>
+            <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer">📍 Kort ↗</a>
+          </div>
           ${metaChips(house)}
           <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer">Se hele opslaget ↗</a>
           <div class="vote-actions">
@@ -1344,6 +1367,8 @@ async function renderAdmin(){
         <label>Navn*</label><input id="nh-name" value="${escapeAttr(h.name)}">
         <label>Link til opslag*</label><input id="nh-link" value="${escapeAttr(h.link)}">
         <label>Beliggenhed</label><input id="nh-loc" value="${escapeAttr(h.location)}">
+        <label>Land</label><input id="nh-country" value="${escapeAttr(h.country)}" placeholder="Frankrig">
+        <label>Landekode (2 bogstaver)</label><input id="nh-countrycode" value="${escapeAttr(h.countryCode)}" placeholder="FR" maxlength="2" style="text-transform:uppercase;">
         <label>Antal værelser</label><input id="nh-rooms" type="number" value="${h.rooms ?? ""}">
         <label>Rating (0-5)</label><input id="nh-rating" type="number" step="0.5" min="0" max="5" value="${h.rating ?? ""}">
         <label>Pris pr. par (kr)</label><input id="nh-price" type="number" value="${h.price ?? ""}">
