@@ -91,7 +91,7 @@
     content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%);
     width:8px;height:8px;border-radius:50%;background:var(--gold);border:1px solid var(--ink);
   }
-  .loc-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:16px;}
+  .bottom-links{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:auto;padding-top:14px;}
   .maplink{
     font-size:11px;letter-spacing:0.3px;color:var(--ink);text-decoration:none;
     border-bottom:1px solid var(--gold);padding-bottom:1px;font-weight:600;white-space:nowrap;
@@ -146,13 +146,13 @@
     background:rgba(43,38,32,0.12);color:var(--ink);font-size:12px;line-height:1;
   }
 
-  .postcard-body{padding:26px 24px 24px;position:relative;}
+  .postcard-body{padding:26px 24px 24px;position:relative;display:flex;flex-direction:column;min-height:250px;}
   .postcard-body::before{
     content:"";position:absolute;inset:8px;border:1px solid var(--gold-dim);pointer-events:none;
   }
-  .house-name{font-family:'Fraunces',serif;font-weight:400;font-size:23px;margin:0 0 8px;line-height:1.2;letter-spacing:0.2px;}
+  .house-name{font-family:'Fraunces',serif;font-weight:400;font-size:23px;margin:0 0 8px;line-height:1.2;letter-spacing:0.2px;min-height:2.4em;}
   .rule{width:34px;height:1px;background:var(--gold);margin:0 0 10px;}
-  .house-loc{font-size:12px;color:var(--muted);margin:0 0 16px;letter-spacing:0.3px;}
+  .house-loc{font-size:12px;color:var(--muted);margin:0 0 16px;letter-spacing:0.3px;min-height:2.2em;}
   .house-meta{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px;}
   .chip{
     font-size:11px;color:var(--olive);font-weight:600;letter-spacing:0.6px;text-transform:uppercase;
@@ -982,7 +982,6 @@ async function saveHouseFromForm(){
   const art = document.getElementById("nh-art").value;
   const soldOut = document.getElementById("nh-soldout").checked;
   const country = document.getElementById("nh-country").value.trim();
-  const countryCode = document.getElementById("nh-countrycode").value.trim().toUpperCase();
   const errEl = document.getElementById("form-error");
   if(!name || !link){
     if(errEl) errEl.textContent = "Navn og link er påkrævet.";
@@ -990,7 +989,7 @@ async function saveHouseFromForm(){
   }
   const photoUrls = formPhotoUrls.map(s => s.trim()).filter(Boolean);
   const id = editingHouseId || ("h" + Date.now());
-  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls, country, countryCode};
+  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls, country};
 
   const ok = await ghUpdate(draft => {
     draft.houses = editingHouseId
@@ -1059,7 +1058,7 @@ function imageBlock(house, opts){
   opts = opts || {};
   const stampHtml = opts.stamp ? `<div class="stamp ${opts.stamp==='like'?'ok':''}">${opts.stamp==='like'?'Elsket':'Nej tak'}</div>` : "";
   const eyebrow = opts.eyebrow ? `<div class="img-eyebrow">${opts.eyebrow}</div>` : "";
-  const countryTag = house.countryCode ? `<div class="img-tag">${house.countryCode} · ${house.country}</div>` : "";
+  const countryTag = house.country ? `<div class="img-tag">${house.country}</div>` : "";
   const uploaded = house.images && house.images.length;
   const imgs = uploaded ? house.images : ((house.photoUrls && house.photoUrls.length) ? house.photoUrls : []);
   if(imgs.length){
@@ -1076,7 +1075,10 @@ function imageBlock(house, opts){
     // might still be blocked by the source site — if so, fall back to the
     // illustration for that house instead of a broken image icon.
     const onerrorAttr = uploaded ? "" : ` onerror="this.onerror=null;this.outerHTML=sceneSVG('${house.art}')"`;
-    return `<div class="img-wrap">
+    const swipeAttrs = imgs.length > 1
+      ? ` ontouchstart="handleSwipeStart(event)" ontouchend="handleSwipeEnd(event,'${house.id}',${imgs.length})"`
+      : "";
+    return `<div class="img-wrap"${swipeAttrs}>
         <img src="${imgs[idx]}" alt="${house.name}"${onerrorAttr}>
         ${countryTag}${eyebrow}${nav}${dots}${stampHtml}
       </div>`;
@@ -1092,6 +1094,23 @@ function nextImage(houseId, dir, total){
   const cur = imgIdx[houseId] || 0;
   imgIdx[houseId] = (cur + dir + total) % total;
   render();
+}
+let swipeStartX = null, swipeStartY = null;
+function handleSwipeStart(e){
+  const t = e.changedTouches[0];
+  swipeStartX = t.clientX;
+  swipeStartY = t.clientY;
+}
+function handleSwipeEnd(e, houseId, total){
+  if(swipeStartX === null) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - swipeStartX;
+  const dy = t.clientY - swipeStartY;
+  swipeStartX = null; swipeStartY = null;
+  // Ignore mostly-vertical drags (the person is scrolling the page).
+  if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
+    nextImage(houseId, dx < 0 ? 1 : -1, total);
+  }
 }
 function metaChips(house){
   return `<div class="house-meta">
@@ -1199,13 +1218,13 @@ function renderVote(){
       <div class="postcard-body">
         <h2 class="house-name">${house.name}</h2>
         <div class="rule"></div>
-        <div class="loc-row">
-          <p class="house-loc" style="margin:0;">${house.location||""}</p>
-          <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Kort ↗</a>
-        </div>
+        <p class="house-loc">${house.location||""}</p>
         ${metaChips(house)}
         <p class="small" style="margin:0 0 10px;">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr. pr. par" : "Se pris på hjemmesiden"}</p>
-        <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se hele opslaget ↗</a>
+        <div class="bottom-links">
+          <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se hele opslaget ↗</a>
+          <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Kort ↗</a>
+        </div>
       </div>
     </div>
     <div class="vote-actions">
@@ -1248,12 +1267,12 @@ function renderReview(){
         <div class="postcard-body">
           <h2 class="house-name">${house.name}</h2>
           <div class="rule"></div>
-          <div class="loc-row">
-            <p class="house-loc" style="margin:0;">${house.location||""}</p>
+          <p class="house-loc">${house.location||""}</p>
+          ${metaChips(house)}
+          <div class="bottom-links">
+            <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer">Se hele opslaget ↗</a>
             <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer">📍 Kort ↗</a>
           </div>
-          ${metaChips(house)}
-          <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer">Se hele opslaget ↗</a>
           <div class="vote-actions">
             <button class="vote-btn dislike" style="${v==='dislike'?'background:var(--terracotta);color:#fff;border-color:var(--terracotta);':''}" onclick="castVoteInline('${house.id}','dislike')">Nej tak</button>
             <button class="vote-btn like" style="${v==='like'?'':'background:none;color:var(--ink);'}" onclick="castVoteInline('${house.id}','like')">Elsker det</button>
@@ -1371,7 +1390,6 @@ async function renderAdmin(){
         <label>Link til opslag*</label><input id="nh-link" value="${escapeAttr(h.link)}">
         <label>Beliggenhed</label><input id="nh-loc" value="${escapeAttr(h.location)}">
         <label>Land</label><input id="nh-country" value="${escapeAttr(h.country)}" placeholder="Frankrig">
-        <label>Landekode (2 bogstaver)</label><input id="nh-countrycode" value="${escapeAttr(h.countryCode)}" placeholder="FR" maxlength="2" style="text-transform:uppercase;">
         <label>Antal værelser</label><input id="nh-rooms" type="number" value="${h.rooms ?? ""}">
         <label>Rating (0-5)</label><input id="nh-rating" type="number" step="0.5" min="0" max="5" value="${h.rating ?? ""}">
         <label>Pris pr. par (kr)</label><input id="nh-price" type="number" value="${h.price ?? ""}">
