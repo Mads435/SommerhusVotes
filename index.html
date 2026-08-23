@@ -152,7 +152,14 @@
   }
   .house-name{font-family:'Fraunces',serif;font-weight:400;font-size:23px;margin:0 0 8px;line-height:1.2;letter-spacing:0.2px;min-height:2.4em;}
   .rule{width:34px;height:1px;background:var(--gold);margin:0 0 10px;}
-  .house-loc{font-size:12px;color:var(--muted);margin:0 0 16px;letter-spacing:0.3px;min-height:2.2em;}
+  .house-loc{font-size:12px;color:var(--muted);margin:0;letter-spacing:0.3px;min-height:2.2em;}
+  .price-line{
+    margin:16px 0;padding:12px 0;
+    border-top:1px solid var(--gold-dim);border-bottom:1px solid var(--gold-dim);
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .price-line .price-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .price-line .price-amt{font-family:'Fraunces',serif;font-weight:600;font-size:24px;color:var(--terracotta);}
   .house-meta{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px;}
   .chip{
     font-size:11px;color:var(--olive);font-weight:600;letter-spacing:0.6px;text-transform:uppercase;
@@ -1284,8 +1291,11 @@ function renderVote(){
         <h2 class="house-name">${house.name}</h2>
         <div class="rule"></div>
         <p class="house-loc">${house.location||""}</p>
+        <div class="price-line">
+          <span class="price-label">Pris pr. par</span>
+          <span class="price-amt">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr" : "Se hjemmeside"}</span>
+        </div>
         ${metaChips(house)}
-        <p class="small" style="margin:0 0 10px;">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr. pr. par" : "Se pris på hjemmesiden"}</p>
         <div class="bottom-links">
           <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Se hele opslaget ↗</a>
           <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Kort ↗</a>
@@ -1333,6 +1343,10 @@ function renderReview(){
           <h2 class="house-name">${house.name}</h2>
           <div class="rule"></div>
           <p class="house-loc">${house.location||""}</p>
+          <div class="price-line">
+            <span class="price-label">Pris pr. par</span>
+            <span class="price-amt">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr" : "Se hjemmeside"}</span>
+          </div>
           ${metaChips(house)}
           <div class="bottom-links">
             <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer">Se hele opslaget ↗</a>
