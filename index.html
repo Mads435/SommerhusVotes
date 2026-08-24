@@ -1040,6 +1040,7 @@ async function saveHouseFromForm(){
   const art = document.getElementById("nh-art").value;
   const soldOut = document.getElementById("nh-soldout").checked;
   const country = document.getElementById("nh-country").value.trim();
+  const sqm = document.getElementById("nh-sqm").value ? parseInt(document.getElementById("nh-sqm").value) : null;
   const errEl = document.getElementById("form-error");
   if(!name || !link){
     if(errEl) errEl.textContent = "Navn og link er påkrævet.";
@@ -1047,7 +1048,7 @@ async function saveHouseFromForm(){
   }
   const photoUrls = formPhotoUrls.map(s => s.trim()).filter(Boolean);
   const id = editingHouseId || ("h" + Date.now());
-  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls, country};
+  const newHouseData = {id, name, link, location, rooms, rating, price, art, soldOut, photoUrls, country, sqm};
 
   const ok = await ghUpdate(draft => {
     draft.houses = editingHouseId
@@ -1171,8 +1172,9 @@ function handleSwipeEnd(e, houseId, total){
   }
 }
 function metaChips(house){
+  const sizePart = house.sqm ? `${house.sqm} m² · ` : "";
   return `<div class="house-meta">
-    <span class="chip">${house.rooms ?? "?"} værelser</span>
+    <span class="chip">${sizePart}${house.rooms ?? "?"} værelser</span>
     <span class="chip gold">${stars(house.rating)}</span>
   </div>`;
 }
@@ -1472,6 +1474,7 @@ async function renderAdmin(){
         <label>Link til opslag*</label><input id="nh-link" value="${escapeAttr(h.link)}">
         <label>Beliggenhed</label><input id="nh-loc" value="${escapeAttr(h.location)}">
         <label>Land</label><input id="nh-country" value="${escapeAttr(h.country)}" placeholder="Frankrig">
+        <label>Størrelse (m²)</label><input id="nh-sqm" type="number" value="${h.sqm ?? ""}">
         <label>Antal værelser</label><input id="nh-rooms" type="number" value="${h.rooms ?? ""}">
         <label>Rating (0-5)</label><input id="nh-rating" type="number" step="0.5" min="0" max="5" value="${h.rating ?? ""}">
         <label>Pris pr. par (kr)</label><input id="nh-price" type="number" value="${h.price ?? ""}">
