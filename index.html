@@ -291,6 +291,11 @@ function loadGithubToken(){
   if(stored) GITHUB_TOKEN = stored;
 }
 const VOTE_DEADLINE = new Date("2026-08-26T23:59:59");
+// Round 2: ranking vote among the 4 finalists chosen from round 1's likes.
+// h20 (Château de la Loire) is no longer available and has been replaced
+// with h17 (Villa Martinière) per admin decision.
+const ROUND2_HOUSE_IDS = ["h17", "h2", "h5", "h15"];
+const ROUND2_POINTS = {1: 5, 2: 3, 3: 2, 4: 1};
 
 const SEED_HOUSES = [
   {
@@ -783,7 +788,12 @@ async function ghPut(dataObj, sha, message){
   }
 }
 function defaultState(){
-  return { houses: SEED_HOUSES, votes: emptyVotesBlob(), importedSeedIds: SEED_HOUSES.map(h => h.id) };
+  return {
+    houses: SEED_HOUSES,
+    votes: emptyVotesBlob(),
+    importedSeedIds: SEED_HOUSES.map(h => h.id),
+    round2: { enabled: false, votes: emptyVotesBlob() }
+  };
 }
 // Read-modify-write with retry on conflicts (two people saving at once).
 // `mutate` always receives the FRESHEST state fetched right before saving,
@@ -800,6 +810,9 @@ async function ghUpdate(mutate, message){
       houses = updated.houses;
       votesBlob = updated.votes;
       importedSeedIds = new Set(updated.importedSeedIds || []);
+      const r2 = updated.round2 || { enabled: false, votes: emptyVotesBlob() };
+      round2Enabled = !!r2.enabled;
+      round2Votes = r2.votes || emptyVotesBlob();
       return true;
     }
     if(!result.conflict){ await delay(500 * (attempt + 1)); continue; }
@@ -826,6 +839,9 @@ async function refreshState(){
     houses = data.houses || houses;
     votesBlob = data.votes || votesBlob;
     importedSeedIds = new Set(data.importedSeedIds || [...importedSeedIds]);
+    const r2 = data.round2 || { enabled: round2Enabled, votes: round2Votes };
+    round2Enabled = !!r2.enabled;
+    round2Votes = r2.votes || round2Votes;
   }
 }
 async function loadState(){
@@ -834,6 +850,9 @@ async function loadState(){
     houses = result.data.houses || SEED_HOUSES;
     votesBlob = result.data.votes || emptyVotesBlob();
     importedSeedIds = new Set(result.data.importedSeedIds || []);
+    const r2 = result.data.round2 || { enabled: false, votes: emptyVotesBlob() };
+    round2Enabled = !!r2.enabled;
+    round2Votes = r2.votes || emptyVotesBlob();
   }else if(!result.error){
     // A confirmed 404 (no error) means the file genuinely doesn't exist
     // yet — safe to seed it for the very first time.
@@ -843,6 +862,8 @@ async function loadState(){
       houses = SEED_HOUSES;
       votesBlob = emptyVotesBlob();
       importedSeedIds = new Set(SEED_HOUSES.map(h => h.id));
+      round2Enabled = false;
+      round2Votes = emptyVotesBlob();
     }
   }else{
     // A real error (bad/expired token, network issue, GitHub outage) —
@@ -856,14 +877,20 @@ async function loadState(){
       houses = retry.data.houses || SEED_HOUSES;
       votesBlob = retry.data.votes || emptyVotesBlob();
       importedSeedIds = new Set(retry.data.importedSeedIds || []);
+      const r2 = retry.data.round2 || { enabled: false, votes: emptyVotesBlob() };
+      round2Enabled = !!r2.enabled;
+      round2Votes = r2.votes || emptyVotesBlob();
     }else{
       houses = SEED_HOUSES;
       votesBlob = emptyVotesBlob();
       importedSeedIds = new Set(SEED_HOUSES.map(h => h.id));
+      round2Enabled = false;
+      round2Votes = emptyVotesBlob();
       console.warn("Could not reach GitHub (bad token or network issue) — showing local data for this session only. Nothing was overwritten remotely. Reload once the token/connection is fixed.");
     }
   }
   FAMILIES.forEach((_, i) => { if(!votesBlob[famId(i)]) votesBlob[famId(i)] = {}; });
+  FAMILIES.forEach((_, i) => { if(!round2Votes[famId(i)]) round2Votes[famId(i)] = {}; });
 }
 
 // Seed houses not yet in the saved list. Only added when the admin
@@ -891,6 +918,11 @@ function emptyVotesBlob(){
   return b;
 }
 
+// ---- Round 2: ranking vote among the finalists ----
+let round2Enabled = false;
+let round2Votes = {}; // {f1:{ranking:{houseId:1..4}, comment:""}, f2:{...}, ...}
+let round2Ranking = {}; // in-progress ranking for the family currently voting
+
 /* ---------------- INIT ---------------- */
 async function init(){
   loadGithubToken();
@@ -903,6 +935,7 @@ async function init(){
   goToNameOrClosed();
 }
 function goToNameOrClosed(){
+  if(round2Enabled){ screen = "name"; render(); return; }
   screen = (new Date() > VOTE_DEADLINE) ? "closed" : "name";
   render();
 }
@@ -940,9 +973,53 @@ async function confirmFamilyLogin(){
   pendingFamIdx = null;
   currentFamId = famId(idx);
   currentFamName = FAMILIES[idx];
+  if(round2Enabled){
+    goToRound2();
+    return;
+  }
   currentVotes = votesBlob[currentFamId] || {};
   voteOrder = shuffle(houses.map(h => h.id));
   goToVotingOrDone();
+}
+function goToRound2(){
+  const existing = round2Votes[currentFamId];
+  if(existing && existing.ranking){
+    screen = "round2Done";
+  }else{
+    round2Ranking = {};
+    screen = "round2Vote";
+  }
+  render();
+}
+function setRound2Rank(houseId, rank){
+  const currentRankOfThis = round2Ranking[houseId];
+  const otherHouseId = Object.keys(round2Ranking).find(id => round2Ranking[id] === rank && id !== houseId);
+  if(otherHouseId){
+    if(currentRankOfThis){ round2Ranking[otherHouseId] = currentRankOfThis; }
+    else{ delete round2Ranking[otherHouseId]; }
+  }
+  round2Ranking[houseId] = rank;
+  render();
+}
+async function submitRound2(){
+  if(Object.keys(round2Ranking).length < ROUND2_HOUSE_IDS.length) return;
+  const commentEl = document.getElementById("round2-comment");
+  const comment = commentEl ? commentEl.value.trim() : "";
+  const famId_ = currentFamId;
+  const ranking = {...round2Ranking};
+  const errEl = document.getElementById("round2-error");
+  const ok = await ghUpdate(draft => {
+    draft.round2 = draft.round2 || { enabled: true, votes: emptyVotesBlob() };
+    draft.round2.votes = draft.round2.votes || emptyVotesBlob();
+    draft.round2.votes[famId_] = { ranking, comment };
+    return draft;
+  }, `Round2 vote ${famId_}`);
+  if(!ok){
+    if(errEl) errEl.textContent = "Kunne ikke gemme jeres stemme lige nu. Prøv igen om lidt.";
+    return;
+  }
+  screen = "round2Done";
+  render();
 }
 function shuffle(arr){
   const a = arr.slice();
@@ -1107,6 +1184,16 @@ async function refreshAdmin(){
   await refreshState();
   render();
 }
+async function toggleRound2(){
+  const turningOn = !round2Enabled;
+  const ok = await ghUpdate(draft => {
+    draft.round2 = draft.round2 || { enabled: false, votes: emptyVotesBlob() };
+    draft.round2.enabled = turningOn;
+    draft.round2.votes = draft.round2.votes || emptyVotesBlob();
+    return draft;
+  }, turningOn ? "Open round 2" : "Close round 2");
+  if(ok) render();
+}
 
 /* ---------------- RENDER HELPERS ---------------- */
 function stars(r){
@@ -1185,6 +1272,8 @@ function render(){
   if(screen === "name") return renderName();
   if(screen === "tokenSetup") return renderTokenSetup();
   if(screen === "familyLogin") return renderFamilyLogin();
+  if(screen === "round2Vote") return renderRound2Vote();
+  if(screen === "round2Done") return renderRound2Done();
   if(screen === "vote") return renderVote();
   if(screen === "done") return renderDone();
   if(screen === "review") return renderReview();
@@ -1225,18 +1314,26 @@ function saveTokenManually(){
 }
 
 function renderName(){
-  const progressList = FAMILIES.map((_,i)=> Object.keys(votesBlob[famId(i)]||{}).length);
+  const isR2 = round2Enabled;
+  const progressList = FAMILIES.map((_,i)=> isR2
+    ? (round2Votes[famId(i)] && round2Votes[famId(i)].ranking ? 1 : 0)
+    : Object.keys(votesBlob[famId(i)]||{}).length);
+  const target = isR2 ? 1 : houses.length;
   app.innerHTML = `
     <div class="topbar">
       <div class="brand">🏡 Sommerhus<span>-afstemning</span></div>
       <button class="link-btn" onclick="screen='adminLogin';render()">Admin</button>
     </div>
-    <p style="color:var(--muted);font-size:14px;margin-top:0;">Vælg jeres navn for at like eller dislike husene. I kan ændre jeres stemmer indtil <b>26. august</b>.</p>
+    <p style="color:var(--muted);font-size:14px;margin-top:0;">
+      ${isR2
+        ? "Vælg jeres navn for at rangere de 4 finalehuse. Denne afstemning er endelig og kan ikke ændres, når I har stemt."
+        : "Vælg jeres navn for at like eller dislike husene. I kan ændre jeres stemmer indtil <b>26. august</b>."}
+    </p>
     <div class="fam-list">
       ${FAMILIES.map((f,i)=>`
         <button class="fam-btn" onclick="selectFamily(${i})">
           <span>${f}</span>
-          ${progressList[i] === houses.length && houses.length>0 ? '<span class="check">✔</span>' : `<span class="small">${progressList[i]}/${houses.length}</span>`}
+          ${progressList[i] === target && target>0 ? '<span class="check">✔</span>' : `<span class="small">${progressList[i]}/${target}</span>`}
         </button>`).join("")}
     </div>
   `;
@@ -1378,6 +1475,56 @@ function castVoteInline(houseId, value){
   render();
 }
 
+function renderRound2Vote(){
+  const finalists = ROUND2_HOUSE_IDS.map(id => houses.find(h => h.id === id)).filter(Boolean);
+  const allRanked = Object.keys(round2Ranking).length >= finalists.length;
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🏡 <span>Finalerunde</span></div>
+      <button class="link-btn" onclick="backToStart()">Skift familie</button>
+    </div>
+    <p style="color:var(--muted);font-size:14px;margin-top:0;">
+      ${currentFamName}, rangér de 4 huse fra 1 (størst ønske) til 4 (mindst). Tryk et tal — er det allerede brugt, bytter husene plads.
+    </p>
+    <div class="link-rows" style="gap:10px;">
+      ${finalists.map(house => {
+        const rank = round2Ranking[house.id];
+        return `
+        <div class="admin-card" style="display:flex;align-items:center;gap:12px;padding:12px;${rank?'border-color:var(--gold);':''}">
+          <div style="width:56px;height:56px;border-radius:2px;flex-shrink:0;overflow:hidden;">${sceneSVG(house.art)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:'Fraunces',serif;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${house.name}</div>
+            <div style="font-size:10.5px;color:var(--muted);">${house.location||""}</div>
+          </div>
+          <div style="display:flex;gap:5px;flex-shrink:0;">
+            ${[1,2,3,4].map(n => `
+              <button onclick="setRound2Rank('${house.id}',${n})"
+                style="width:26px;height:26px;border-radius:50%;border:1px solid var(--gold-dim);cursor:pointer;font-family:'Fraunces',serif;font-weight:600;font-size:12px;
+                ${rank===n ? 'background:var(--ink);color:var(--linen);border-color:var(--ink);' : 'background:none;color:var(--muted);'}">${n}</button>
+            `).join("")}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+    <label>Kommentar (valgfrit)</label>
+    <textarea id="round2-comment" placeholder="Fx: Alle huse er fine for os"></textarea>
+    <p id="round2-error" class="small" style="color:var(--terracotta);min-height:14px;margin:8px 0 0;"></p>
+    <button class="primary-btn" ${allRanked?"":"disabled style=\"opacity:0.4;cursor:not-allowed;\""} onclick="submitRound2()">Stem</button>
+  `;
+}
+function renderRound2Done(){
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="link-btn" onclick="backToStart()">&larr; Skift familie</button>
+    </div>
+    <div class="center-msg">
+      <span class="emoji">🥂</span>
+      <h2 class="display" style="margin-bottom:6px;">Tak!</h2>
+      <p style="color:var(--muted);font-size:14px;">${currentFamName}s rangering er modtaget.</p>
+    </div>
+  `;
+}
+
 function renderClosed(){
   app.innerHTML = `
     <div class="topbar">
@@ -1464,6 +1611,60 @@ async function renderAdmin(){
           </div>`).join("") || '<p class="small">Ingen huse endnu.</p>'}
       </div>
     `;
+  } else if(adminTab === "round2"){
+    const finalists = ROUND2_HOUSE_IDS.map(id => houses.find(h => h.id === id)).filter(Boolean);
+    const r2Votes = FAMILIES.map((_,i) => round2Votes[famId(i)] || {});
+    const scores = finalists.map(h => {
+      let points = 0;
+      r2Votes.forEach(v => { if(v.ranking && v.ranking[h.id]) points += ROUND2_POINTS[v.ranking[h.id]] || 0; });
+      return {...h, points};
+    }).sort((a,b) => b.points - a.points);
+    const r2Progress = FAMILIES.map((f,i) => ({
+      name: f,
+      done: !!(round2Votes[famId(i)] && round2Votes[famId(i)].ranking),
+      comment: round2Votes[famId(i)] ? round2Votes[famId(i)].comment : ""
+    }));
+    body = `
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;">Finalerunde</h3>
+          <button class="link-btn" onclick="refreshAdmin()">🔄 Opdatér</button>
+        </div>
+        <p class="small" style="margin:8px 0 12px;">
+          ${round2Enabled
+            ? "Åben — familier kan logge ind og rangere de 4 finalehuse."
+            : "Lukket — familier ser stadig den almindelige like/dislike-afstemning."}
+        </p>
+        <button class="${round2Enabled ? 'danger-btn' : 'primary-btn'}" style="${round2Enabled ? '' : 'margin-top:0;'}" onclick="toggleRound2()">
+          ${round2Enabled ? "Luk finalerunden" : "Åbn finalerunden for familierne"}
+        </button>
+      </div>
+      <div class="admin-card">
+        <h3 style="margin-top:0;">Pointtavle (5/3/2/1 point)</h3>
+        ${scores.map((h,i)=>`
+          <div class="admin-row">
+            <span><span class="rank">#${i+1}</span> ${h.name}</span>
+            <span>${h.points} point</span>
+          </div>`).join("")}
+      </div>
+      <div class="admin-card">
+        <h3 style="margin-top:0;">Hvem mangler at stemme</h3>
+        ${r2Progress.map(p=>`
+          <div class="admin-row">
+            <span>${p.name}</span>
+            <span>${p.done ? '<span class="check">✔ Færdig</span>' : "Mangler"}</span>
+          </div>`).join("")}
+      </div>
+      ${r2Progress.some(p=>p.comment) ? `
+      <div class="admin-card">
+        <h3 style="margin-top:0;">Kommentarer</h3>
+        ${r2Progress.filter(p=>p.comment).map(p=>`
+          <div class="admin-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+            <span style="font-weight:700;">${p.name}</span>
+            <span class="small">${p.comment}</span>
+          </div>`).join("")}
+      </div>` : ""}
+    `;
   } else if(adminTab === "add" || adminTab === "edit"){
     const editing = adminTab === "edit" ? houses.find(h => h.id === editingHouseId) : null;
     const h = editing || {name:"",link:"",location:"",rooms:"",rating:"",price:"",soldOut:false};
@@ -1531,6 +1732,7 @@ async function renderAdmin(){
       <div class="tab ${adminTab==='results'?'active':''}" onclick="adminTab='results';render()">Resultat</div>
       <div class="tab ${(adminTab==='manage'||adminTab==='edit')?'active':''}" onclick="editingHouseId=null;formPhotoUrls=[];adminTab='manage';render()">Huse</div>
       <div class="tab ${adminTab==='add'?'active':''}" onclick="goToAddTab()">Tilføj</div>
+      <div class="tab ${adminTab==='round2'?'active':''}" onclick="adminTab='round2';render()">Runde 2</div>
     </div>
     ${body}
   `;
