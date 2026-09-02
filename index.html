@@ -922,6 +922,7 @@ function emptyVotesBlob(){
 let round2Enabled = false;
 let round2Votes = {}; // {f1:{ranking:{houseId:1..4}, comment:""}, f2:{...}, ...}
 let round2Ranking = {}; // in-progress ranking for the family currently voting
+let round2InfoDismissed = false;
 
 /* ---------------- INIT ---------------- */
 async function init(){
@@ -987,6 +988,7 @@ function goToRound2(){
     screen = "round2Done";
   }else{
     round2Ranking = {};
+    round2InfoDismissed = false;
     screen = "round2Vote";
   }
   render();
@@ -1483,9 +1485,6 @@ function renderRound2Vote(){
       <div class="brand">🏡 <span>Finalerunde</span></div>
       <button class="link-btn" onclick="backToStart()">Skift familie</button>
     </div>
-    <p style="color:var(--muted);font-size:14px;margin-top:0;">
-      ${currentFamName}, rangér de 4 huse fra 1 (størst ønske) til 4 (mindst). Tryk et tal — er det allerede brugt, bytter husene plads.
-    </p>
     ${finalists.map(house => {
       const rank = round2Ranking[house.id];
       return `
@@ -1515,6 +1514,29 @@ function renderRound2Vote(){
     <p id="round2-error" class="small" style="color:var(--terracotta);min-height:14px;margin:8px 0 0;"></p>
     <button class="primary-btn" ${allRanked?"":"disabled style=\"opacity:0.4;cursor:not-allowed;\""} onclick="submitRound2()">Stem</button>
   `;
+  if(!round2InfoDismissed) showRound2Info();
+}
+function showRound2Info(){
+  hideRound2Info();
+  const div = document.createElement("div");
+  div.id = "round2-info-overlay";
+  div.style.cssText = "position:fixed;inset:0;background:rgba(43,38,32,0.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:24px;";
+  div.innerHTML = `
+    <div style="background:var(--linen);border-radius:2px;padding:26px 22px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.35);">
+      <p style="font-family:'Fraunces',serif;font-size:16px;color:var(--ink);margin:0 0 20px;">
+        ${currentFamName}, rangér de 4 huse fra 1 (størst ønske) til 4 (mindst). Tryk et tal — er det allerede brugt, bytter husene plads.
+      </p>
+      <button class="primary-btn" style="margin:0;" onclick="dismissRound2Info()">Forstået</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+function hideRound2Info(){
+  const el = document.getElementById("round2-info-overlay");
+  if(el) el.remove();
+}
+function dismissRound2Info(){
+  round2InfoDismissed = true;
+  hideRound2Info();
 }
 function renderRound2Done(){
   app.innerHTML = `
