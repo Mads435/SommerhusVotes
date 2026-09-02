@@ -1486,26 +1486,30 @@ function renderRound2Vote(){
     <p style="color:var(--muted);font-size:14px;margin-top:0;">
       ${currentFamName}, rangér de 4 huse fra 1 (størst ønske) til 4 (mindst). Tryk et tal — er det allerede brugt, bytter husene plads.
     </p>
-    <div class="link-rows" style="gap:10px;">
-      ${finalists.map(house => {
-        const rank = round2Ranking[house.id];
-        return `
-        <div class="admin-card" style="display:flex;align-items:center;gap:12px;padding:12px;${rank?'border-color:var(--gold);':''}">
-          <div style="width:56px;height:56px;border-radius:2px;flex-shrink:0;overflow:hidden;">${sceneSVG(house.art)}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-family:'Fraunces',serif;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${house.name}</div>
-            <div style="font-size:10.5px;color:var(--muted);">${house.location||""}</div>
+    ${finalists.map(house => {
+      const rank = round2Ranking[house.id];
+      return `
+      <div class="postcard" style="margin-bottom:16px;${rank?'outline:2px solid var(--gold);':''}">
+        ${imageBlock(house)}
+        <div class="postcard-body" style="min-height:auto;">
+          <h2 class="house-name" style="min-height:0;">${house.name}</h2>
+          <div class="rule"></div>
+          <p class="house-loc">${house.location||""}</p>
+          <div class="price-line">
+            <span class="price-label">Pris pr. par</span>
+            <span class="price-amt">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr" : "Se hjemmeside"}</span>
           </div>
-          <div style="display:flex;gap:5px;flex-shrink:0;">
+          ${metaChips(house)}
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:6px;">
             ${[1,2,3,4].map(n => `
               <button onclick="setRound2Rank('${house.id}',${n})"
-                style="width:26px;height:26px;border-radius:50%;border:1px solid var(--gold-dim);cursor:pointer;font-family:'Fraunces',serif;font-weight:600;font-size:12px;
+                style="width:38px;height:38px;border-radius:50%;border:1px solid var(--gold-dim);cursor:pointer;font-family:'Fraunces',serif;font-weight:600;font-size:15px;
                 ${rank===n ? 'background:var(--ink);color:var(--linen);border-color:var(--ink);' : 'background:none;color:var(--muted);'}">${n}</button>
             `).join("")}
           </div>
-        </div>`;
-      }).join("")}
-    </div>
+        </div>
+      </div>`;
+    }).join("")}
     <label>Kommentar (valgfrit)</label>
     <textarea id="round2-comment" placeholder="Fx: Alle huse er fine for os"></textarea>
     <p id="round2-error" class="small" style="color:var(--terracotta);min-height:14px;margin:8px 0 0;"></p>
