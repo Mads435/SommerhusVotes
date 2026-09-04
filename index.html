@@ -1523,7 +1523,11 @@ function renderRound2Vote(){
             <span class="price-amt">${house.price ? Number(house.price).toLocaleString("da-DK") + " kr" : "Se hjemmeside"}</span>
           </div>
           ${metaChips(house)}
-          <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:6px;">
+          <div class="bottom-links">
+            <a class="house-link" href="${house.link}" target="_blank" rel="noopener noreferrer">Se hele opslaget ↗</a>
+            <a class="maplink" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(house.location||house.name)}" target="_blank" rel="noopener noreferrer">📍 Kort ↗</a>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:14px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3zm0 0 4.5-8a2 2 0 0 1 3.5 1.5V9h4a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 18 20H7" stroke="var(--gold)" stroke-width="1.6" stroke-linejoin="round"/></svg>
             ${[1,2,3,4].map(n => `
               <button onclick="setRound2Rank('${house.id}',${n})"
